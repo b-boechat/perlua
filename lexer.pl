@@ -17,6 +17,14 @@ sub read_file {
     return $text;
 }
 
+sub parser_error {
+    # parser_error ($FILENAME, $LINE, $ERROR_MESSAGE)
+    # Prints error message and stops source parsing.
+    (my $filename, my $line, my $error_message) = @_;
+    print ("{File '$filename', line $line} PARSER ERROR: $error_message");
+    exit undef; #Stops parser.
+}
+
 sub build_token {
     # build_token ($TYPE, $VALUE)
     (my $type, my $value) = @_;
@@ -87,7 +95,12 @@ sub scan_string {
     # This function scans $TEXT for a string token.
     # $TEXT is passed by reference, so that the function can consume the string characters (including leading and ending ") from input.
     # Returns the corresponding token if a match is found; otherwise, returns an empty hash.
+    # If an invalid string is read, returns an ERROR token, which can be treated by 'tokenize_input'.
     my $text_r = shift;
+    #if (${$text_r} =~ /[^\\]?\n/ {
+    #    return build_token("ERROR", "Unexpected newline parsing string literal.");
+    #}
+
     if (${$text_r} =~ /^"([^"]*)"/) {
         my $match = $1;
         my $escaped_match = quotemeta($match);
@@ -99,10 +112,12 @@ sub scan_string {
 
 
 sub skip_whitespace {
-    # scan_symbols (\$TEXT)
-    # This function receives a string, passed by reference, and consumes an arbitrary amount of leading whitespace.
-    my $text = shift;
-    ${$text} =~ s/^\s*//;
+    # scan_symbols (\$TEXT, \$LINE)
+    # This function receives $TEXT, passed by reference, and consumes an arbitrary amount of leading whitespace.
+    # $LINE is incremented for each character \n found.
+    (my $text_r, my $line_r) = @_;
+    ${$text_r} =~ s/^(\s*)//; #Removes leading whitespace from $text.
+    ${$line_r} += ($1 =~ tr/\n//); #Increments $line_r.
 }
 
 sub get_next_token {
@@ -113,31 +128,33 @@ sub get_next_token {
     return %token if %token;
     %token = scan_string($text_r);
     return %token if %token;
-    die "Deu ruim no input!";
+    return build_token("ERROR", "Unrecognized lexeme.");
 }
 
 sub tokenize_input {
     # tokenize_input ($FILENAME)
     # FUTURAMENTE ESSA FUNCAO VAI SER A INTERFACE COM C++
     my %token;
+    my $line = 1;
     my $filename = shift;
     my $text = read_file($filename); #Reads source code from input file.
     $text = "$text "; #Appending a whitespace allows for some cleaner regex while never altering the functionality.
-    skip_whitespace(\$text);
+    skip_whitespace(\$text, \$line);
     while (length($text)) { #Loops while there are characthers left in the string.
         %token = get_next_token(\$text);
-        print (stringify_token(%token), "\n"); #futuramente, trocar esse print e o de baixo por insert numa lista de tokens, que tem que ser retornada para o C++
-        skip_whitespace(\$text);
+        parser_error($filename, $line, $token{"value"}) if $token{"type"} eq "ERROR";
+        print ("Line ", $line, "- ", stringify_token(%token), "\n"); #futuramente, trocar esse print e o de baixo por insert numa lista de tokens, que tem que ser retornada para o C++
+        skip_whitespace(\$text, \$line);
     }
     %token = build_token("EOS", "None");
-    print (stringify_token(%token), "\n");
+    print ("Line ", $line, "- ", stringify_token(%token), "\n");
 }
 
-my $filename = "input.txt";
+my $_FILENAME = "input.txt";
 my $TESTING = 0;
 if (!$TESTING) {
-    print_text(read_file($filename));
-    tokenize_input($filename);
+    print_text(read_file($_FILENAME));
+    tokenize_input($_FILENAME);
 }
 else {
     # Do some test

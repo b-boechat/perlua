@@ -42,7 +42,9 @@ Tipos:
 	- table
 	- userdata
 
+https://webserver2.tecgraf.puc-rio.br/lua/local/manual/5.0/manual.html
 
 ajuda:
 https://stackoverflow.com/questions/26414835/perl-modify-variable-passed-as-param-to-subroutine
 https://perldoc.perl.org/perlintro.html
+
