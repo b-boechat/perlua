@@ -37,10 +37,10 @@ sub stringify_token {
 
 sub scan_symbols {
     # scan_symbols (\$TEXT)
-    # This function scans for non alphanumeric tokens, like COMMA, HIFEN, etc.
+    # This function scans $TEXT for non alphanumeric tokens, like COMMA, HIFEN, etc.
     # $TEXT is passed by reference, so that the function is able to consume the matching characters from input.
-    # Returns the corresponding token if a match is found, otherwise returns an empty token, which can be used in boolean conditions.
-    my $text = shift;
+    # Returns the corresponding token if a match is found; otherwise, returns an empty hash.
+    my $text_r = shift;
     my %symbol_names = (
         "," => "COMMA",
         "+" => "PLUS",
@@ -48,7 +48,6 @@ sub scan_symbols {
         "/" => "SLASH",
         "\\" => "BACKSLASH",
         "-" => "HIFEN",
-        '"' => "QUOTE",
         "(" => "PAR_OPEN",
         ")" => "PAR_CLOSE",
         "{" => "CURLY_OPEN",
@@ -66,26 +65,36 @@ sub scan_symbols {
     );
     # APAGAR ISSO, SPECIAL CHARACTERS INSIDE GROUPS: -[]\^$
 
-    if (${$text} =~ /^([,+*\-"(){}])/ #Matches tokens: COMMA, PLUS, STAR, SLASH, BACKSLASH, HIFEN, QUOTE, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
-        or ${$text} =~ /^([=<>])[^=]/ #Matches tokens: SINGLE_EQUAL, LESSER, GREATER
-        or ${$text} =~ /^([=<>][=])/ #Matches tokens: DOUBLE EQUAL, LESSER_THAN, GREATER_THAN
-        or ${$text} =~ /^(\[)[^\[]/ #Matches token SQUARE_OPEN
-        or ${$text} =~ /^(\])[^\]]/ #Matches token SQUARE_CLOSE
-        or ${$text} =~ /^((\[\[)|(\]\]))/ #Matches tokens: SQUARE_DOUBLE_OPEN, SQUARE_DOUBLE_CLOSE
+    if (${$text_r} =~ /^([,+*\-(){}])/ #Matches tokens: COMMA, PLUS, STAR, SLASH, BACKSLASH, HIFEN, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
+        or ${$text_r} =~ /^([=<>])[^=]/ #Matches tokens: SINGLE_EQUAL, LESSER, GREATER
+        or ${$text_r} =~ /^([=<>][=])/ #Matches tokens: DOUBLE EQUAL, LESSER_THAN, GREATER_THAN
+        or ${$text_r} =~ /^(\[)[^\[]/ #Matches token SQUARE_OPEN
+        or ${$text_r} =~ /^(\])[^\]]/ #Matches token SQUARE_CLOSE
+        or ${$text_r} =~ /^((\[\[)|(\]\]))/ #Matches tokens: SQUARE_DOUBLE_OPEN, SQUARE_DOUBLE_CLOSE
     ){
         my $match = $1;
         my $escaped_match = quotemeta($match); #This is necessary so, in the substitution line below, special characters like / and ( are properly escaped.
-        #print("Before \$\$text: '${$text}'\n\$match: '$match'\n\$escaped_match: '$escaped_match'\n");
-        ${$text} =~ s/$escaped_match//; #Consumes matching characters from input
-        #print("After \$\$text: '${$text}'\n\n");
+        #print("Before \$\$text_r: '${$text_r}'\n\$match: '$match'\n\$escaped_match: '$escaped_match'\n");
+        ${$text_r} =~ s/$escaped_match//; #Consumes matching characters from input
+        #print("After \$\$text_r: '${$text_r}'\n\n");
         return build_token($symbol_names{$match}, "None");
     } 
     return ();
 }
 
 sub scan_string {
-
-
+    # scan_string (\$TEXT)
+    # This function scans $TEXT for a string token.
+    # $TEXT is passed by reference, so that the function can consume the string characters (including leading and ending ") from input.
+    # Returns the corresponding token if a match is found; otherwise, returns an empty hash.
+    my $text_r = shift;
+    if (${$text_r} =~ /^"([^"]*)"/) {
+        my $match = $1;
+        my $escaped_match = quotemeta($match);
+        ${$text_r} =~ s/"$escaped_match"//;
+        return build_token("STRING", $match);
+    }
+    return ();
 }
 
 
@@ -101,6 +110,8 @@ sub get_next_token {
     my $text_r = shift;
     my %token;
     %token = scan_symbols($text_r);
+    return %token if %token;
+    %token = scan_string($text_r);
     return %token if %token;
     die "Deu ruim no input!";
 }
@@ -123,10 +134,14 @@ sub tokenize_input {
 }
 
 my $filename = "input.txt";
-
-print_text(read_file($filename));
-tokenize_input($filename);
-
+my $TESTING = 0;
+if (!$TESTING) {
+    print_text(read_file($filename));
+    tokenize_input($filename);
+}
+else {
+    # Do some test
+}
 
 sub print_text {
     #Deletar essa funcao depois, é só uma helper
