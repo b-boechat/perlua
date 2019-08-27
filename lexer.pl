@@ -22,7 +22,7 @@ sub parser_error {
     # Prints error message and stops source parsing.
     (my $filename, my $line, my $error_message) = @_;
     print ("{File '$filename', line $line} PARSER ERROR: $error_message");
-    exit undef; #Stops parser.
+    exit 1; #Stops parser.
 }
 
 sub build_token {
@@ -68,8 +68,6 @@ sub scan_symbols {
         ">=" => "GREATER_THAN",
         "[" => "SQUARE_OPEN",
         "]" => "SQUARE_CLOSE",
-        "[[" => "SQ_DOUBLE_OPEN",
-        "]]" => "SQ_DOUBLE_CLOSE" 
     );
     # APAGAR ISSO, SPECIAL CHARACTERS INSIDE GROUPS: -[]\^$
 
@@ -78,7 +76,6 @@ sub scan_symbols {
         or ${$text_r} =~ /^([=<>][=])/ #Matches tokens: DOUBLE EQUAL, LESSER_THAN, GREATER_THAN
         or ${$text_r} =~ /^(\[)[^\[]/ #Matches token SQUARE_OPEN
         or ${$text_r} =~ /^(\])[^\]]/ #Matches token SQUARE_CLOSE
-        or ${$text_r} =~ /^((\[\[)|(\]\]))/ #Matches tokens: SQUARE_DOUBLE_OPEN, SQUARE_DOUBLE_CLOSE
     ){
         my $match = $1;
         my $escaped_match = quotemeta($match); #This is necessary so, in the substitution line below, special characters like / and ( are properly escaped.
@@ -93,21 +90,35 @@ sub scan_symbols {
 sub scan_string {
     # scan_string (\$TEXT)
     # This function scans $TEXT for a string token.
-    # $TEXT is passed by reference, so that the function can consume the string characters (including leading and ending ") from input.
+    # $TEXT is passed by reference, so that the function can consume the string characters (including enclosing characters) from input.
     # Returns the corresponding token if a match is found; otherwise, returns an empty hash.
     # If an invalid string is read, returns an ERROR token, which can be treated by 'tokenize_input'.
     my $text_r = shift;
-    #if (${$text_r} =~ /[^\\]?\n/ {
-    #    return build_token("ERROR", "Unexpected newline parsing string literal.");
-    #}
-
-    if (${$text_r} =~ /^"([^"]*)"/) {
-        my $match = $1;
+    if (${$text_r} =~ /^(")([^"]*)"/      #String: "foo"
+        or ${$text_r} =~ /^(')([^']*)'/   #String: 'foo'
+        or ${$text_r} =~ /^(\[\[)([^(\]\])]*)\]\]/ #String: [[foo]]
+    ){
+        my $enclosing = $1;
+        my $match = $2;
+        return build_token ("ERROR", "Unexpected newline parsing string literal.") if $match =~ /\n/; #Strings can't contain actual line breaks.
         my $escaped_match = quotemeta($match);
-        ${$text_r} =~ s/"$escaped_match"//;
+        if ($enclosing ne "[["){
+            ${$text_r} =~ s/(["'])$escaped_match\g1//; #Consumes token from input, for formats "foo" and 'foo'.
+            $match =~ s/\\([rnt'"\\])/"qq|\\$1|"/gee; #Evaluate special sequences of characters '\n', '\r', and '\t'. This is not done on [[foo]] format, as per Lua specification.
+        }
+        else {
+            ${$text_r} =~ s/\[\[$escaped_match\]\]//; #Consumes token from input, for format [[foo]].
+        }
         return build_token("STRING", $match);
-    }
+    } 
+
     return ();
+}
+
+sub scan_number {
+    # scan_number (\$TEXT)
+    # This function scans $TEXT for a number token.
+    my $text_r = shift;
 }
 
 
