@@ -1,4 +1,9 @@
-    >=
-   'olaaaaa\n[{}\n/APOSADPOKDAPOKA' + + >= >= > ,
-<=   > >> >>   [[aaallo\n\noo]]
->>
+while -- comment
+ --[[ this
+is
+a
+multiline
+comment]]
+
+
+) > >=

@@ -39,7 +39,8 @@ https://webserver2.tecgraf.puc-rio.br/lua/local/manual/5.0/manual.html
 
 diferencas:
 	- nao inclui a string poder ter quebra de linha precedido de \
-
+	- nao inclui especificar caracteres por \numero na string
+	- nao inclui comentarios aninhados
 
 ajuda:
 https://stackoverflow.com/questions/26414835/perl-modify-variable-passed-as-param-to-subroutine

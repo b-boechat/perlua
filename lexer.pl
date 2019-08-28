@@ -54,28 +54,38 @@ sub scan_symbols {
         "+" => "PLUS",
         "*" => "STAR",
         "/" => "SLASH",
-        "\\" => "BACKSLASH",
-        "-" => "HIFEN",
+        "^" => "CIRCUMFLEX",
+        ";" => "SEMICOLON",
+        ":" => "COLON",
         "(" => "PAR_OPEN",
         ")" => "PAR_CLOSE",
         "{" => "CURLY_OPEN",
         "}" => "CURLY_CLOSE",
+        "-" => "HIFEN",
         "=" => "SINGLE_EQUAL",
         "<" => "LESSER",
         ">" => "GREATER",
         "==" => "DOUBLE_EQUAL",
         "<=" => "LESSER_THAN",
         ">=" => "GREATER_THAN",
+        "~=" => "NOT_EQUAL",
         "[" => "SQUARE_OPEN",
         "]" => "SQUARE_CLOSE",
+        "." => "DOT",
+        ".." => "DOUBLE_DOT",
+        "..." => "TRIPLE_DOT",
     );
     # APAGAR ISSO, SPECIAL CHARACTERS INSIDE GROUPS: -[]\^$
 
-    if (${$text_r} =~ /^([,+*\-(){}])/ #Matches tokens: COMMA, PLUS, STAR, SLASH, BACKSLASH, HIFEN, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
+    if (${$text_r} =~ /^([,+*\/\^;:(){}])/ #Matches tokens: COMMA, PLUS, STAR, SLASH, CIRCUMFLEX, SEMICOLON, COLON, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
+        or ${$text_r} =~ /^\-^\-/ #Matches token HIFEN
         or ${$text_r} =~ /^([=<>])[^=]/ #Matches tokens: SINGLE_EQUAL, LESSER, GREATER
-        or ${$text_r} =~ /^([=<>][=])/ #Matches tokens: DOUBLE EQUAL, LESSER_THAN, GREATER_THAN
+        or ${$text_r} =~ /^([=<>~][=])/ #Matches tokens: DOUBLE EQUAL, LESSER_THAN, GREATER_THAN, NOT_EQUAL
         or ${$text_r} =~ /^(\[)[^\[]/ #Matches token SQUARE_OPEN
         or ${$text_r} =~ /^(\])[^\]]/ #Matches token SQUARE_CLOSE
+        or ${$text_r} =~ /^(\.)[^\.]/ #Matches token DOT
+        or ${$text_r} =~ /^(\.\.)[^\.]/ #Matches token DOUBLE_DOT
+        or ${$text_r} =~ /^(\.\.\.)/ #Matches token TRIPLE_DOT
     ){
         my $match = $1;
         my $escaped_match = quotemeta($match); #This is necessary so, in the substitution line below, special characters like / and ( are properly escaped.
@@ -100,7 +110,7 @@ sub scan_string {
     ){
         my $enclosing = $1;
         my $match = $2;
-        return build_token ("ERROR", "Unexpected newline parsing string literal.") if $match =~ /\n/; #Strings can't contain actual line breaks.
+        return build_token("ERROR", "Unexpected newline parsing string literal.") if $match =~ /\n/; #Strings can't contain actual line breaks.
         my $escaped_match = quotemeta($match);
         if ($enclosing ne "[["){
             ${$text_r} =~ s/(["'])$escaped_match\g1//; #Consumes token from input, for formats "foo" and 'foo'.
@@ -119,16 +129,92 @@ sub scan_number {
     # scan_number (\$TEXT)
     # This function scans $TEXT for a number token.
     my $text_r = shift;
+    if (${$text_r} =~ /^(([0-9]+.?[0-9]*)([eE][-+]?[0-9]+)?)/){   #TA COM BUG PERMITINDO 2e SEM NENHUM NUMERO DEPOIS!
+        my $match = $1;
+        #print("Before \$text_r: '${$text_r}'\n\$match: '$match'\n"); #DEBUG TIRAR DEPOIS
+        ${$text_r} =~ s/$match//; #Consumes matching characters from input 
+            return build_token("NUMBER", $match+0); #Perl allows for implicit string to number conversion.
+    }
+     return ();
 }
 
+sub scan_identifier {
+    # scan_identifer (\$TEXT)
+    # This functions scans $TEXT for an keyword or identifier.
+    my %keywords = (
+        "and" => "AND",
+        "end" => "END",
+        "in" => "IN",
+        "repeat" => "REPEAT",
+        "break" => "BREAK",
+        "false" => "FALSE",
+        "local" => "LOCAL",
+        "return" => "RETURN",
+        "do" => "DO",
+        "for" => "FOR",
+        "nil" => "NIL",
+        "then" => "THEN",
+        "else" => "ELSE",
+        "function" => "FUNCTION",
+        "not" => "NOT",
+        "elseif" => "ELSEIF",
+        "if" => "IF",
+        "or" => "OR",
+        "until" => "UNTIL",
+        "while" => "WHILE",
+    );
+    my $text_r = shift;
+    if (${$text_r} =~ /^([a-zA-Z_][0-9a-zA-Z_]*)[^0-9a-zA-Z_]/){ #Matches a valid identifier or keyword (contains only alphanumeric characters, not starting with digits).
+        my $match = $1;
+        ${$text_r} =~ s/$match//; #Consumes matching characters from input
+        if (exists($keywords{$match})) { #Token is a keyword.
+            return build_token($keywords{$match}, "None");
+        }
+        #Token is not a keyword, so it's interpreted as an identifier.
+        return build_token("IDENTIFIER", $match);
+    }
+    return ();
+}
 
 sub skip_whitespace {
-    # scan_symbols (\$TEXT, \$LINE)
+    # skip_whitespace (\$TEXT, \$LINE)
     # This function receives $TEXT, passed by reference, and consumes an arbitrary amount of leading whitespace.
     # $LINE is incremented for each character \n found.
+    # Returns the amount of leading whitespace skipped. 
     (my $text_r, my $line_r) = @_;
     ${$text_r} =~ s/^(\s*)//; #Removes leading whitespace from $text.
-    ${$line_r} += ($1 =~ tr/\n//); #Increments $line_r.
+    my $match = $1;
+    ${$line_r} += ($match =~ tr/\n//); #Increments $line_r.
+    return length($match);
+}
+
+sub skip_comment {
+    # skip_comment (\$TEXT, \$LINE)
+    # Returns 1 if at least one comment section was skipped, 0 otherwise. 
+    (my $text_r, my $line_r) = @_;
+    my $had_comment = 0;
+    # A loop is used so sequences of comments can be properly skipped.
+    #print ("Text before skipping: \'\n${$text_r}\n'\n\n");
+    while (${$text_r} =~ /^(\-\-\[\[.*\]\])/s #Matches multi-line comment of the form --[[comment ]]
+            or ${$text_r} =~ /^(\-\-.*)/ #Matches single-line comment of the of the form --coment
+    ){
+    #print ("In this?\nThen \$match = \'$1\'\n\n");
+    $had_comment = 1;
+    my $match = $1;
+    ${$line_r} += ($match =~ tr/\n//); #Increments $line_r.
+    my $escaped_match = quotemeta($match); #This is necessary so, in the substitution line below, special characters like / and ( are properly escaped.
+    ${$text_r} =~ s/$escaped_match//; #Consumes matching characters from input
+    }
+    return $had_comment;
+}
+
+sub skip_meaningless {
+    # skip_comment (\$TEXT, \$LINE)
+    (my $text_r, my $line_r) = @_;
+    my $skipped = 1;
+    while ($skipped) {
+        $skipped = skip_comment($text_r, $line_r) + skip_whitespace($text_r, $line_r);
+    }
 }
 
 sub get_next_token {
@@ -138,6 +224,10 @@ sub get_next_token {
     %token = scan_symbols($text_r);
     return %token if %token;
     %token = scan_string($text_r);
+    return %token if %token;
+    %token = scan_number($text_r);
+    return %token if %token;
+    %token = scan_identifier($text_r);
     return %token if %token;
     return build_token("ERROR", "Unrecognized lexeme.");
 }
@@ -150,29 +240,32 @@ sub tokenize_input {
     my $filename = shift;
     my $text = read_file($filename); #Reads source code from input file.
     $text = "$text "; #Appending a whitespace allows for some cleaner regex while never altering the functionality.
-    skip_whitespace(\$text, \$line);
+    skip_meaningless(\$text, \$line);
     while (length($text)) { #Loops while there are characthers left in the string.
         %token = get_next_token(\$text);
         parser_error($filename, $line, $token{"value"}) if $token{"type"} eq "ERROR";
         print ("Line ", $line, "- ", stringify_token(%token), "\n"); #futuramente, trocar esse print e o de baixo por insert numa lista de tokens, que tem que ser retornada para o C++
-        skip_whitespace(\$text, \$line);
+        skip_meaningless(\$text, \$line);
     }
     %token = build_token("EOS", "None");
     print ("Line ", $line, "- ", stringify_token(%token), "\n");
 }
 
-my $_FILENAME = "input.txt";
-my $TESTING = 0;
+my $TESTING = 1;
 if (!$TESTING) {
+    my $_FILENAME = "input.txt";
     print_text(read_file($_FILENAME));
     tokenize_input($_FILENAME);
 }
 else {
+    my $_FILENAME = shift @ARGV;
+    print_text(read_file($_FILENAME));
+    tokenize_input($_FILENAME);
     # Do some test
 }
 
 sub print_text {
     #Deletar essa funcao depois, é só uma helper
     my $output = shift @_;
-    print "\n\"\n", $output, "\"\n\n";
+    print ("\"$output\"\n\n");
 }
