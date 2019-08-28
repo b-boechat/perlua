@@ -53,22 +53,31 @@ sub scan_symbols {
         "," => "COMMA",
         "+" => "PLUS",
         "*" => "STAR",
-        "/" => "SLASH",
+        "|" => "VERTICAL_BAR",
+        "%" => "PERCENT_SIGN",
+        "#" => "HASH_SIGN",
+        "&" => "AMPERSEND",
         "^" => "CIRCUMFLEX",
         ";" => "SEMICOLON",
-        ":" => "COLON",
         "(" => "PAR_OPEN",
         ")" => "PAR_CLOSE",
         "{" => "CURLY_OPEN",
         "}" => "CURLY_CLOSE",
+        "/" => "SLASH",
         "-" => "HIFEN",
+        ":" => "COLON",
+        "//" => "DOUBLE_SLASH",
+        "::" => "DOUBLE_COLON",
         "=" => "SINGLE_EQUAL",
+        "~" => "TIL",
+        "==" => "DOUBLE_EQUAL",
+        "~=" => "NOT_EQUAL",
+        "<=" => "LESSER_EQUAL",
+        ">=" => "GREATER_EQUAL",
         "<" => "LESSER",
         ">" => "GREATER",
-        "==" => "DOUBLE_EQUAL",
-        "<=" => "LESSER_THAN",
-        ">=" => "GREATER_THAN",
-        "~=" => "NOT_EQUAL",
+        "<<" => "DOUBLE_LESSER",
+        ">>" => "DOUBLE_GREATER",
         "[" => "SQUARE_OPEN",
         "]" => "SQUARE_CLOSE",
         "." => "DOT",
@@ -77,10 +86,17 @@ sub scan_symbols {
     );
     # APAGAR ISSO, SPECIAL CHARACTERS INSIDE GROUPS: -[]\^$
 
-    if (${$text_r} =~ /^([,+*\/\^;:(){}])/ #Matches tokens: COMMA, PLUS, STAR, SLASH, CIRCUMFLEX, SEMICOLON, COLON, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
-        or ${$text_r} =~ /^\-^\-/ #Matches token HIFEN
-        or ${$text_r} =~ /^([=<>])[^=]/ #Matches tokens: SINGLE_EQUAL, LESSER, GREATER
-        or ${$text_r} =~ /^([=<>~][=])/ #Matches tokens: DOUBLE EQUAL, LESSER_THAN, GREATER_THAN, NOT_EQUAL
+    if (${$text_r} =~ /^([,+*|%#&\^;:(){}])/ #Matches tokens: COMMA, PLUS, STAR, VERTICAL_BAR, PERCENT_SIGN, HASH_SIGN, AMPERSAND, CIRCUMFLEX, SEMICOLON, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
+        or ${$text_r} =~ /^(\/)[^\/]/ #Matches token SLASH
+        or ${$text_r} =~ /^(\-)[^\-]/ #Matches token HIFEN, COLON
+        or ${$text_r} =~ /^(:)[^:]/ #Matches token COLON
+        or ${$text_r} =~ /^(\:\:)/ #Matches token DOUBLE_COLON
+        or ${$text_r} =~ /^(\/\/)/ #Matches token DOUBLE_SLASH
+        or ${$text_r} =~ /^([=~])[^=]/ #Matches tokens: SINGLE_EQUAL, TIL
+        or ${$text_r} =~ /^([=~<>]=)/ #Matches tokens: DOUBLE EQUAL, NOT_EQUAL, LESSER_EQUAL, GREATER_EQUAL
+        or ${$text_r} =~ /^(<)[^<]/ #Matches token LESSER (supoe que o LESSER_EQUAL JA FOI ACHADO)
+        or ${$text_r} =~ /^(>)[^>]/ #Matches token GREATER (supoe que o GREATER_EQUAL JA FOI ACHADO)
+        or ${$text_r} =~ /^(<<|>>)/ #Matches tokens DOUBLE_LESSER, DOUBLE_GREATER
         or ${$text_r} =~ /^(\[)[^\[]/ #Matches token SQUARE_OPEN
         or ${$text_r} =~ /^(\])[^\]]/ #Matches token SQUARE_CLOSE
         or ${$text_r} =~ /^(\.)[^\.]/ #Matches token DOT
@@ -89,7 +105,7 @@ sub scan_symbols {
     ){
         my $match = $1;
         my $escaped_match = quotemeta($match); #This is necessary so, in the substitution line below, special characters like / and ( are properly escaped.
-        #print("Before \$\$text_r: '${$text_r}'\n\$match: '$match'\n\$escaped_match: '$escaped_match'\n");
+        print("Before \$text: '", substr(${$text_r}, 0, 15), "'\n\$match: '$match'\n\$escaped_match: '$escaped_match'\n");
         ${$text_r} =~ s/$escaped_match//; #Consumes matching characters from input
         #print("After \$\$text_r: '${$text_r}'\n\n");
         return build_token($symbol_names{$match}, "None");
@@ -143,25 +159,27 @@ sub scan_identifier {
     # This functions scans $TEXT for an keyword or identifier.
     my %keywords = (
         "and" => "AND",
-        "end" => "END",
-        "in" => "IN",
-        "repeat" => "REPEAT",
-        "break" => "BREAK",
         "false" => "FALSE",
         "local" => "LOCAL",
-        "return" => "RETURN",
-        "do" => "DO",
+        "then" => "THEN",
+        "break" => "BREAK",
         "for" => "FOR",
         "nil" => "NIL",
-        "then" => "THEN",
-        "else" => "ELSE",
+        "true" => "TRUE",
+        "do" => "DO",
         "function" => "FUNCTION",
         "not" => "NOT",
+        "until" => "UNTIL",
+        "else" => "ELSE",
+        "goto" => "GOTO",
+        "or" => "OR",
+        "while" => "WHILE",
         "elseif" => "ELSEIF",
         "if" => "IF",
-        "or" => "OR",
-        "until" => "UNTIL",
-        "while" => "WHILE",
+        "repeat" => "REPEAT",
+        "end" => "END",
+        "in" => "IN",
+        "return" => "RETURN",
     );
     my $text_r = shift;
     if (${$text_r} =~ /^([a-zA-Z_][0-9a-zA-Z_]*)[^0-9a-zA-Z_]/){ #Matches a valid identifier or keyword (contains only alphanumeric characters, not starting with digits).
@@ -251,9 +269,15 @@ sub tokenize_input {
     print ("Line ", $line, "- ", stringify_token(%token), "\n");
 }
 
-my $TESTING = 1;
+############################# EVERYTHING BELOW IS JUST FOR TESTING, NOT INCLUDED IN FINAL CODE
+
+
+my $TESTING = 0;
 if (!$TESTING) {
-    my $_FILENAME = "input.txt";
+    my $_FILENAME = shift @ARGV;
+    if (!$_FILENAME){
+        $_FILENAME = "input.txt";
+    }
     print_text(read_file($_FILENAME));
     tokenize_input($_FILENAME);
 }
