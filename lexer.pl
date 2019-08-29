@@ -83,10 +83,9 @@ sub scan_symbols {
         "." => "DOT",
         ".." => "DOUBLE_DOT",
         "..." => "TRIPLE_DOT",
-    );
-    # APAGAR ISSO, SPECIAL CHARACTERS INSIDE GROUPS: -[]\^$
+    ); # APAGAR ISSO, REGEX SPECIAL CHARACTERS INSIDE GROUPS: -[]\^$
 
-    if (${$text_r} =~ /^([,+*|%#&\^;:(){}])/ #Matches tokens: COMMA, PLUS, STAR, VERTICAL_BAR, PERCENT_SIGN, HASH_SIGN, AMPERSAND, CIRCUMFLEX, SEMICOLON, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
+    if (${$text_r} =~ /^([,+*|%#&\^;(){}])/ #Matches tokens: COMMA, PLUS, STAR, VERTICAL_BAR, PERCENT_SIGN, HASH_SIGN, AMPERSAND, CIRCUMFLEX, SEMICOLON, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
         or ${$text_r} =~ /^(\/)[^\/]/ #Matches token SLASH
         or ${$text_r} =~ /^(\-)[^\-]/ #Matches token HIFEN, COLON
         or ${$text_r} =~ /^(:)[^:]/ #Matches token COLON
@@ -105,7 +104,6 @@ sub scan_symbols {
     ){
         my $match = $1;
         my $escaped_match = quotemeta($match); #This is necessary so, in the substitution line below, special characters like / and ( are properly escaped.
-        print("Before \$text: '", substr(${$text_r}, 0, 15), "'\n\$match: '$match'\n\$escaped_match: '$escaped_match'\n");
         ${$text_r} =~ s/$escaped_match//; #Consumes matching characters from input
         #print("After \$\$text_r: '${$text_r}'\n\n");
         return build_token($symbol_names{$match}, "None");
@@ -145,10 +143,11 @@ sub scan_number {
     # scan_number (\$TEXT)
     # This function scans $TEXT for a number token.
     my $text_r = shift;
-    if (${$text_r} =~ /^(([0-9]+.?[0-9]*)([eE][-+]?[0-9]+)?)/){   #TA COM BUG PERMITINDO 2e SEM NENHUM NUMERO DEPOIS!
+    if (${$text_r} =~ /^(([0-9]+\.?[0-9]*)([eE][-+]?[0-9]+)?)/){   #TA COM BUG PERMITINDO 2e SEM NENHUM NUMERO DEPOIS!
         my $match = $1;
+        my $escaped_match = quotemeta($match);
         #print("Before \$text_r: '${$text_r}'\n\$match: '$match'\n"); #DEBUG TIRAR DEPOIS
-        ${$text_r} =~ s/$match//; #Consumes matching characters from input 
+        ${$text_r} =~ s/$escaped_match//; #Consumes matching characters from input 
             return build_token("NUMBER", $match+0); #Perl allows for implicit string to number conversion.
     }
      return ();
@@ -158,28 +157,28 @@ sub scan_identifier {
     # scan_identifer (\$TEXT)
     # This functions scans $TEXT for an keyword or identifier.
     my %keywords = (
-        "and" => "AND",
-        "false" => "FALSE",
-        "local" => "LOCAL",
-        "then" => "THEN",
-        "break" => "BREAK",
-        "for" => "FOR",
-        "nil" => "NIL",
-        "true" => "TRUE",
-        "do" => "DO",
-        "function" => "FUNCTION",
-        "not" => "NOT",
-        "until" => "UNTIL",
-        "else" => "ELSE",
-        "goto" => "GOTO",
-        "or" => "OR",
-        "while" => "WHILE",
-        "elseif" => "ELSEIF",
-        "if" => "IF",
-        "repeat" => "REPEAT",
-        "end" => "END",
-        "in" => "IN",
-        "return" => "RETURN",
+        "and" => "KW_AND",
+        "false" => "KW_FALSE",
+        "local" => "KW_LOCAL",
+        "then" => "KW_THEN",
+        "break" => "KW_BREAK",
+        "for" => "KW_FOR",
+        "nil" => "KW_NIL",
+        "true" => "KW_TRUE",
+        "do" => "KW_DO",
+        "function" => "KW_FUNCTION",
+        "not" => "KW_NOT",
+        "until" => "KW_UNTIL",
+        "else" => "KW_ELSE",
+        "goto" => "KW_GOTO",
+        "or" => "KW_OR",
+        "while" => "KW_WHILE",
+        "elseif" => "KW_ELSEIF",
+        "if" => "KW_IF",
+        "repeat" => "KW_REPEAT",
+        "end" => "KW_END",
+        "in" => "KW_IN",
+        "return" => "KW_RETURN",
     );
     my $text_r = shift;
     if (${$text_r} =~ /^([a-zA-Z_][0-9a-zA-Z_]*)[^0-9a-zA-Z_]/){ #Matches a valid identifier or keyword (contains only alphanumeric characters, not starting with digits).
@@ -290,6 +289,6 @@ else {
 
 sub print_text {
     #Deletar essa funcao depois, é só uma helper
-    my $output = shift @_;
-    print ("\"$output\"\n\n");
+    my $text = shift @_;
+    print ("\"$text\"\n\n");
 }
