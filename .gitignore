@@ -2,3 +2,4 @@ lua_test.lua
 perltest.pl
 _*
 *.o
+*.out

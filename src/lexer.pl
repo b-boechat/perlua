@@ -74,11 +74,11 @@ sub scan_symbols {
         "~" => "TIL",
         "==" => "DOUBLE_EQUAL",
         "~=" => "NOT_EQUAL",
-        "<=" => "LESSER_EQUAL",
+        "<=" => "LESS_EQUAL",
         ">=" => "GREATER_EQUAL",
-        "<" => "LESSER",
+        "<" => "LESS",
         ">" => "GREATER",
-        "<<" => "DOUBLE_LESSER",
+        "<<" => "DOUBLE_LESS",
         ">>" => "DOUBLE_GREATER",
         "[" => "SQUARE_OPEN",
         "]" => "SQUARE_CLOSE",
@@ -94,10 +94,10 @@ sub scan_symbols {
         or ${$text_r} =~ /^(\:\:)/ #Matches token DOUBLE_COLON
         or ${$text_r} =~ /^(\/\/)/ #Matches token DOUBLE_SLASH
         or ${$text_r} =~ /^([=~])[^=]/ #Matches tokens: SINGLE_EQUAL, TIL
-        or ${$text_r} =~ /^([=~<>]=)/ #Matches tokens: DOUBLE EQUAL, NOT_EQUAL, LESSER_EQUAL, GREATER_EQUAL
-        or ${$text_r} =~ /^(<)[^<]/ #Matches token LESSER (supoe que o LESSER_EQUAL JA FOI ACHADO)
+        or ${$text_r} =~ /^([=~<>]=)/ #Matches tokens: DOUBLE EQUAL, NOT_EQUAL, LESS_EQUAL, GREATER_EQUAL
+        or ${$text_r} =~ /^(<)[^<]/ #Matches token LESS (supoe que o LESS_EQUAL JA FOI ACHADO)
         or ${$text_r} =~ /^(>)[^>]/ #Matches token GREATER (supoe que o GREATER_EQUAL JA FOI ACHADO)
-        or ${$text_r} =~ /^(<<|>>)/ #Matches tokens DOUBLE_LESSER, DOUBLE_GREATER
+        or ${$text_r} =~ /^(<<|>>)/ #Matches tokens DOUBLE_LESS, DOUBLE_GREATER
         or ${$text_r} =~ /^(\[)[^\[]/ #Matches token SQUARE_OPEN
         or ${$text_r} =~ /^(\])[^\]]/ #Matches token SQUARE_CLOSE
         or ${$text_r} =~ /^(\.)[^\.]/ #Matches token DOT

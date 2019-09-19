@@ -14,6 +14,9 @@ struct Token {
     Token* next;
 };
 
+class Expr {};
+
+
 class Parser {
     private:
         Token* token;
@@ -24,6 +27,15 @@ class Parser {
             }
             ++(*pos);
             return result;
+        }
+        Expr comparison() {
+            // code for comparison expr!
+            Expr expr = addition();
+            while (match("GREATER", "GREATER_EQUAL", "LESS", "LESS_EQUAL", "DOUBLE_EQUAL", "NOT_EQUAL")) {
+            Token algo // ISSO AQUI VAI DAR RUIM !!!!!
+            Expr right = addition;
+            }
+
         }
     public:
         Parser(byte* tokens_stream) {
@@ -59,6 +71,13 @@ class Parser {
                 
             }
         }
+        Expr expression() {
+            // Em lua, comparison e equality sao juntos: https://www.lua.org/manual/5.1/manual.html 2.5.6
+            return comparison();
+        }
+
+
+
         void free() {
             Token* aux_token;
             while (token) {
@@ -75,3 +94,6 @@ class Parser {
             }
         }
 };
+
+
+int main () {return 0;}
