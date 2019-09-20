@@ -1,7 +1,6 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include <array>
 #define SEPARATOR '\0'
 
 using namespace std;
@@ -37,22 +36,31 @@ class Unary : virtual public Expr {
         Expr right;
 };
 
-enum literalType {lua_string, lua_number, lua_boolean, lua_nil_type}; // Implemented types for Lua literals.
-enum specialValue {lua_false, lua_true, lua_nil_val}; // Allows treatment of special values.
+class Grouping : virtual public Expr {
+    public:
+        Grouping(Expr expr_) {
+            expr = expr_;
+        }
+    private:
+        Expr expr;
+};
+
+enum LiteralType {luaString, luaNumber, luaBoolean, luaNilType}; // Implemented types for Lua literals.
+enum SpecialValue {luaFalse, luaTrue, luaNilValue}; // Allows treatment of special values.
 
 template <typename T>
 class Literal: virtual public Expr {
     // T can be:
     // C++ string        --> Lua string
     // C++ double        --> Lua number
-    // C++ specialValue  --> Lua boolean or nil
+    // C++ SpecialValue  --> Lua boolean or nil
     public:
-        Literal(literalType type_, T value_) {
+        Literal(LiteralType type_, T value_) {
             type = type_;
             value = value_;
         }
     private:
-        literalType type;
+        LiteralType type;
         T value;
 };
 
@@ -77,6 +85,9 @@ class Parser {
             }
         }
 
+        Expr parse() {
+            return expression();
+        }
 
         void print_tokens() {
             size_t i;
@@ -85,6 +96,7 @@ class Parser {
                 cout << "Line " << to_string((tokens.at(i)).line) << ", Token {" << (tokens.at(i)).type << ", " << (tokens.at(i)).value << "}" << endl;
             }
         }
+
     private:
         vector <Token> tokens; // Vector of tokens, this is what's going to be parsed.
         unsigned long pos; // Points to current token, while parsing.
@@ -100,21 +112,27 @@ class Parser {
 
         // Token vector navigation is done by the helper functions "check", "peek", "advance" and "is_at_end".
 
-        bool check(string types[], size_t len) {
+        bool check(string types[], size_t len, bool consume_token=false) {
             // Checks if current token type is in "types", returning true if so or false otherwise.
-                // "types" is passed as an array (C-style) of strings, and "len" is passed as the size of the array.
+            // "types" is passed as an array (C-style) of strings, and "len" is passed as the size of the array.
+            // If "consume_token" is true, increments "pos" to point to the next token in the vector.
             size_t i;
             for (i = 0; i < len; ++i) {
                if (peek().type == types[i]) {
+                    if (consume_token)
+                        ++pos;
                     return true;
                }
             }
             return false;
         }
-        bool check(string type) {
+        bool check(string type, bool consume_token=false) {
             // Overloads function "check" to allow for single type to be checked.
-            if (peek().type == type)
+            if (peek().type == type){
+                if (consume_token)
+                    ++pos;
                 return true;
+            }
             return false;
         }
 
@@ -134,6 +152,14 @@ class Parser {
         bool is_at_end() {
             // Checks if currently at end of input. 
             return peek().type == "EOS";
+        }
+
+        // Error handling is done by function "error".
+
+        void error(string message) {
+            // Prints an error message to the user and aborts the program.
+            cout << "Parser Error! Line: " << to_string(peek().line) << ". " << message << endl;
+            exit (1); // Mudar isso depois
         }
 
         // Actual expression parsing is done by the functions "expression", "comparison", "addition" ....
@@ -186,12 +212,27 @@ class Parser {
             return primary();
         }
         Expr primary() {
-            // primary ->   NUMBER | STRING | "false" | "true" | "nil" | "(" expression ")" 
-            // A IMPLEMENTACAO VAI SER ALGO ASSIM, MAS TEM QUE AVANCAR O POS!!!
-            if (check ("FALSE")) return Literal <specialValue> (lua_bool, lua_false);
-            if (check ("TRUE")) return Literal <specialValue> (lua_bool, lua_true);
+            // primary ->   "false" | "true" | "nil" | STRING | NUMBER | "(" expression ")" 
+            if (check("FALSE", true)) 
+                return Literal <SpecialValue> (luaBoolean, luaFalse);
+            if (check("TRUE", true)) 
+                return Literal <SpecialValue> (luaBoolean, luaTrue);
+            if (check("NIL", true)) 
+                return Literal <SpecialValue> (luaNilType, luaNilValue);
+            if (check("STRING"))
+                return Literal <string> (luaString, advance().value);
+            if (check("NUMBER"))
+                return Literal <double> (luaNumber, stod(advance().value));
+            if (check("LEFT_PAREN")) {
+                Expr expr = expression();
+                // Attempts to consume a RIGHT_PAREN from input, otherwise an error is found.
+                if (!check("RIGHT_PAREN", true)) {
+                    error("Expected closing parenthesis!");
+                }
+                return Grouping(expr);
+            }
 
-        return Expr(); // Essa linha é placeholder só pra compilar
+            error("Expected expression!"); 
         }
 };
 
