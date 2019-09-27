@@ -17,11 +17,11 @@ sub read_file {
     return $text;
 }
 
-sub scanner_error {
-    # scanner_error ($FILENAME, $LINE, $ERROR_MESSAGE)
+sub parser_error {
+    # parser_error ($FILENAME, $LINE, $ERROR_MESSAGE)
     # Prints error message and stops source parsing.
     (my $filename, my $line, my $error_message) = @_;
-    print ("{File '$filename', line $line} Error: $error_message");
+    print ("{File '$filename', line $line} PARSER ERROR: $error_message");
     exit 1; #Stops parser.
 }
 
@@ -43,6 +43,15 @@ sub stringify_token {
     my $value = $token{"value"};
     my $line = $token{"line"};
     return "Line $line- Token {type: $type; value: $value}";
+}
+
+sub write_to_file {
+    (my $filename, my $line, my $type, my $value) = @_;
+    open (my $file, ">>", $filename)
+        or die "$0: Error! $!\n";
+    print $file "$type\0$value\0$line\0";
+    print $file "\0" if $type eq "EOS";
+    close ($file);
 }
 
 sub scan_symbols {
@@ -262,17 +271,20 @@ sub tokenize_input {
     skip_meaningless(\$text, \$line);
     while (length($text)) { #Loops while there are characthers left in the string.
         %token = get_next_token(\$text, $line);
-        scanner_error($filename, $token{"line"}, $token{"value"}) if $token{"type"} eq "ERROR";
+        parser_error($filename, $token{"line"}, $token{"value"}) if $token{"type"} eq "ERROR";
         print (stringify_token(%token), "\n"); #futuramente, trocar esse print e o de baixo por insert numa lista de tokens, que tem que ser retornada para o C++
+        write_to_file("output.txt", $token{"line"}, $token{"type"}, $token{"value"});
         skip_meaningless(\$text, \$line);
     }
     %token = build_token("EOS", "None", $line);
     print (stringify_token(%token), "\n");
+    write_to_file("output.txt", $token{"line"}, $token{"type"}, $token{"value"});
     print ("\nScanning of '$filename' sucessfully completed.\n");
 }
 
 ############################# EVERYTHING BELOW IS JUST FOR TESTING, NOT INCLUDED IN FINAL CODE
 
+unlink("output.txt");
 
 my $TESTING = 0;
 if (!$TESTING) {

@@ -1,10 +1,14 @@
 #include <string>
 #include <iostream>
+#include <fstream> // open
 #include <vector>
 #include <math.h> // floor
 #define SEPARATOR '\0'
 
 // TODO Adicionar concatenacao de strings com ..
+// TODO Adidionar relacionais.
+// TODO Passar o nome do arquivo fonte para o parser, pra poder melhorar as mensagens de erro.
+
 
 // TODO Remove this later.
 using namespace std;
@@ -30,7 +34,7 @@ class LuaData {
         virtual LuaBoolean* is_truthy() = 0;
         virtual LuaSpecialValue eval_boolean() { cout << "Should not be here! alsf3f3dsd2" << endl; exit(1); return luaFalse; }
         virtual string eval_string() { cout << "Should not be here! fdsdsksfdk2" << endl; exit(1); return ""; }
-        virtual double eval_number() { cout << "Should not be here! 32f9ffsdfds2" << endl; exit(1); return 0; }
+        virtual double eval_number() { cout << "RuntimeError: Expected number!" << endl; exit(1); return 0; }
         virtual LuaSpecialValue eval_nil() { cout << "Should not be here! lc0wqcsd2" << endl; exit(1); return luaNilValue; }
 };
 class LuaBoolean : public LuaData {
@@ -337,7 +341,7 @@ class Parser {
             // comparison ->    addition ( ( ">" | ">=" | "<" | "<=" | "==" | "~=" ) addition )* ;
             Expr *expr = addition();
             Expr *right;
-            string token_types[6] = {"GREATER", "GREATER_EQUAL", "LESS", "LESS_EQUAL", "EQUAL", "NOT_EQUAL"};
+            string token_types[6] = {"GREATER", "GREATER_EQUAL", "LESS", "LESS_EQUAL", "DOUBLE_EQUAL", "NOT_EQUAL"};
             while (check(token_types, 6)) {
                 Token op = advance();
                 right = addition();
@@ -381,22 +385,22 @@ class Parser {
         }
         Expr* primary() {
             // primary ->   "false" | "true" | "nil" | STRING | NUMBER | "(" expression ")" 
-            if (check("FALSE", true)) 
+            if (check("KW_FALSE", true)) 
                 return new BooleanLiteral(luaFalse);
-            if (check("TRUE", true)) 
+            if (check("KW_TRUE", true)) 
                 return new BooleanLiteral(luaTrue);
-            if (check("NIL", true)) 
+            if (check("KW_NIL", true)) 
                 return new NilLiteral();
             if (check("STRING"))
                 return new StringLiteral(advance().value);
             if (check("NUMBER"))
                 return new NumberLiteral(stod(advance().value));
-            if (check("LEFT_PAREN")) {
+            if (check("PAR_OPEN")) {
                 // Consumes a left parenthesis and tries to parse a grouping expression.
                 advance();
                 Expr *expr = expression();
-                // Attempts to consume a RIGHT_PAREN from input, otherwise an error is found.
-                if (!check("RIGHT_PAREN", true)) {
+                // Attempts to consume a PAR_CLOSE from input, otherwise an error is found.
+                if (!check("PAR_CLOSE", true)) {
                     error("Invalid expression: expected closing parenthesis!");
                 }
                 return new Grouping(expr);
@@ -408,25 +412,25 @@ class Parser {
 
 
 int main (int argc, char** argv) {
-    char stream[200] = {'N', 'U', 'M', 'B', 'E', 'R', '\0', '1', '2', '\0', '3', '4', '\0',                                      // 12
-                        'M', 'I', 'N', 'U', 'S', '\0', 'N', 'O', 'N', 'E', '\0', '3', '5', '\0',                                 // -
-                        'N', 'U', 'M', 'B', 'E', 'R', '\0', '2', '2', '8', '\0', '2', '3', '\0',                                 // 228
-                        'S', 'L', 'A', 'S', 'H', '\0', 'N', 'O', 'N', 'E', '\0', '3', '5', '\0',                                 // /
-                        'L', 'E', 'F', 'T', '_', 'P', 'A', 'R', 'E', 'N', '\0', 'N', 'O', 'N', 'E', '\0', '3', '5', '\0',        // (
-                        'N', 'U', 'M', 'B', 'E', 'R', '\0', '2', '\0', '4', '2', '\0',                                           // 2
-                        'S', 'T', 'A', 'R', '\0', 'N', 'O', 'N', 'E', '\0', '4', '2', '\0',                                      // *
-                        'N', 'U', 'M', 'B', 'E', 'R', '\0', '4', '\0', '4', '2', '\0',                                           // 4
-                        'R', 'I', 'G', 'H', 'T', '_', 'P', 'A', 'R', 'E', 'N', '\0', 'N', 'O', 'N', 'E', '\0', '3', '5', '\0',   // )
 
-                        'E', 'O', 'S', '\0', 'N', 'O', 'N', 'E', '\0', '3', '4', '\0'
-    };
+    // Currently reading from file, change that later.
 
-
-    Parser parser(stream);
+    char* memblock;
+    streampos size;
+    ifstream file("output.txt", ios::binary|ios::out|ios::ate);
+    if (file.is_open()) {
+        size = file.tellg();
+        memblock = new char [size];
+        file.seekg(0, ios::beg);
+        file.read(memblock, size);
+        file.close();
+    }
+    Parser parser(memblock);
     parser.print_tokens();
     Expr *expr = parser.parse();
     LuaData *data = expr->interpret();
-    cout << data->get_type() << endl;
     cout << data->eval_number() << endl;
+
+    delete[] memblock;
     return 0;
 }
