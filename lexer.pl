@@ -5,15 +5,15 @@ sub read_file {
     # read_file ($FILENAME)
     # FILENAME is passed as a string. This function returns the text content of the file.
     my $filename = shift @_;
-    my $char_limit = 100000; #Maximum file length supported.
+    my $char_limit = 100000000; #Maximum file length supported.
     my $text;
     open (my $file, "<", $filename)
-        or die "$0: can't open $filename for reading: $!";
+        or die "Fatal Error: Can't open $filename for reading: $!\n";
     if (!read ($file, $text, $char_limit) and $!) {
-        die "$0: error reading file: $!";
+        die "Fatal Error: Error reading file: $!\n";
     }
     close ($file)
-        or die "$0: can't close $filename for reading: $!";
+        or die "Fatal Error: can't close $filename for reading: $!\n";
     return $text;
 }
 
@@ -22,11 +22,12 @@ sub parser_error {
     # Prints error message and stops source parsing.
     (my $filename, my $line, my $error_message) = @_;
     print ("{File '$filename', line $line} PARSER ERROR: $error_message");
-    exit 1; #Stops parser.
+    return 1;
 }
 
 sub build_token {
     # build_token ($TYPE, $VALUE, $LINE)
+    # Returns a hash table representing a language token with the given parameters type, value and line.
     (my $type, my $value, my $line) = @_;
     my %token = (
         "type"  => $type,
@@ -37,6 +38,7 @@ sub build_token {
 }
 
 sub stringify_token {
+    # stringify_token (%TOKEN)
     # Converts a hash representing a token to a string version in the format: "Token {<TYPE>, <VALUE>}"
     my %token = @_;
     my $type = $token{"type"};
@@ -47,17 +49,16 @@ sub stringify_token {
 
 sub scan_symbols {
     # scan_symbols (\$TEXT, $LINE)
-    # This function scans $TEXT for non alphanumeric tokens, like COMMA, HIFEN, etc.
-    # $TEXT is passed by reference, so that the function is able to consume the matching characters from input.
-    # Returns the corresponding token if a match is found; otherwise, returns an empty hash.
+    # This function scans $TEXT for non alphanumeric tokens, like COMMA, HIFEN, etc. If one is found, it is consumed and returned.
     (my $text_r, my $line) = @_;
+    # Here all symbol tokens are defined.
     my %symbol_names = (
         "," => "COMMA",
         "+" => "PLUS",
         "*" => "STAR",
         "|" => "VERTICAL_BAR",
-        "%" => "PERCENT_SIGN",
-        "#" => "HASH_SIGN",
+        "%" => "PERCENT",
+        "#" => "HASH",
         "&" => "AMPERSEND",
         "^" => "CIRCUMFLEX",
         ";" => "SEMICOLON",
@@ -66,7 +67,7 @@ sub scan_symbols {
         "{" => "CURLY_OPEN",
         "}" => "CURLY_CLOSE",
         "/" => "SLASH",
-        "-" => "HIFEN",
+        "-" => "MINUS",
         ":" => "COLON",
         "//" => "DOUBLE_SLASH",
         "::" => "DOUBLE_COLON",
@@ -85,11 +86,11 @@ sub scan_symbols {
         "." => "DOT",
         ".." => "DOUBLE_DOT",
         "..." => "TRIPLE_DOT",
-    ); # APAGAR ISSO, REGEX SPECIAL CHARACTERS INSIDE GROUPS: -[]\^$
+    ); 
 
-    if (${$text_r} =~ /^([,+*|%#&\^;(){}])/ #Matches tokens: COMMA, PLUS, STAR, VERTICAL_BAR, PERCENT_SIGN, HASH_SIGN, AMPERSAND, CIRCUMFLEX, SEMICOLON, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
+    if (${$text_r} =~ /^([,+*|%#&\^;(){}])/ #Matches tokens: COMMA, PLUS, STAR, VERTICAL_BAR, PERCENT, HASH, AMPERSEND, CIRCUMFLEX, SEMICOLON, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
         or ${$text_r} =~ /^(\/)[^\/]/ #Matches token SLASH
-        or ${$text_r} =~ /^(\-)[^\-]/ #Matches token HIFEN, COLON
+        or ${$text_r} =~ /^(\-)[^\-]/ #Matches token MINUS, COLON
         or ${$text_r} =~ /^(:)[^:]/ #Matches token COLON
         or ${$text_r} =~ /^(\:\:)/ #Matches token DOUBLE_COLON
         or ${$text_r} =~ /^(\/\/)/ #Matches token DOUBLE_SLASH
@@ -105,20 +106,18 @@ sub scan_symbols {
         or ${$text_r} =~ /^(\.\.\.)/ #Matches token TRIPLE_DOT
     ){
         my $match = $1;
-        my $escaped_match = quotemeta($match); #This is necessary so, in the substitution line below, special characters like / and ( are properly escaped.
-        ${$text_r} =~ s/$escaped_match//; #Consumes matching characters from input
-        #print("After \$\$text_r: '${$text_r}'\n\n");
+        #This is necessary so, in the substitution line below, special characters like / and ( are properly escaped.
+        my $escaped_match = quotemeta($match);
+        ${$text_r} =~ s/$escaped_match//;
         return build_token($symbol_names{$match}, "None", $line);
     } 
+    #If no match is found, returns an empty list. This can be treated by the calling function.
     return ();
 }
 
 sub scan_string {
     # scan_string (\$TEXT, $LINE)
-    # This function scans $TEXT for a string token.
-    # $TEXT is passed by reference, so that the function can consume the string characters (including enclosing characters) from input.
-    # Returns the corresponding token if a match is found; otherwise, returns an empty hash.
-    # If an invalid string is read, returns an ERROR token, which can be treated by 'tokenize_input'.
+    # This function scans $TEXT for a STRING token. If one is found, it is consumed and returned.
     (my $text_r, my $line) = @_;
     if (${$text_r} =~ /^(")([^"]*)"/      #String: "foo"
         or ${$text_r} =~ /^(')([^']*)'/   #String: 'foo'
@@ -126,38 +125,42 @@ sub scan_string {
     ){
         my $enclosing = $1;
         my $match = $2;
-        return build_token("ERROR", "Unexpected newline parsing string literal.", $line) if $match =~ /\n/; #Strings can't contain actual line breaks.
+        #Multi-line strings (with actual line breaks instead of control sequence) are not supported.
+        #If a line break is found, returns an ERROR token, which can be treated by the calling function.
+        return build_token("ERROR", "Unexpected newline parsing string literal.", $line) if $match =~ /\n/;
         my $escaped_match = quotemeta($match);
         if ($enclosing ne "[["){
-            ${$text_r} =~ s/(["'])$escaped_match\g1//; #Consumes token from input, for formats "foo" and 'foo'.
-            $match =~ s/\\([rnt'"\\])/"qq|\\$1|"/gee; #Evaluate special sequences of characters '\n', '\r', and '\t'. This is not done on [[foo]] format, as per Lua specification.
+            #Consumes token from input, for formats "foo" and 'foo'.
+            ${$text_r} =~ s/(["'])$escaped_match\g1//;
+            #Evaluates special sequences of characters '\n', '\r', and '\t'. This is not done on [[foo]] format, as per Lua specification.
+            $match =~ s/\\([rnt'"\\])/"qq|\\$1|"/gee; 
         }
         else {
-            ${$text_r} =~ s/\[\[$escaped_match\]\]//; #Consumes token from input, for format [[foo]].
+            #Consumes token from input, for format [[foo]].
+            ${$text_r} =~ s/\[\[$escaped_match\]\]//; 
         }
         return build_token("STRING", $match, $line);
     } 
-
+    #If no match is found, returns an empty list. This can be treated by the calling function.
     return ();
 }
 
 sub scan_number {
     # scan_number (\$TEXT, $LINE)
-    # This function scans $TEXT for a number token.
+    # This function scans $TEXT for a number token. If one is found, it is consumed and returned.
     (my $text_r, my $line) = @_;
-    if (${$text_r} =~ /^(([0-9]+\.?[0-9]*)([eE][-+]?[0-9]+)?)/){   #TA COM BUG PERMITINDO 2e SEM NENHUM NUMERO DEPOIS!
+    if (${$text_r} =~ /^(([0-9]+\.?[0-9]*)([eE][-+]?[0-9]+)?)/){
         my $match = $1;
-        my $escaped_match = quotemeta($match);
-        #print("Before \$text_r: '${$text_r}'\n\$match: '$match'\n"); #DEBUG TIRAR DEPOIS
-        ${$text_r} =~ s/$escaped_match//; #Consumes matching characters from input 
-            return build_token("NUMBER", $match+0, $line); #Perl allows for implicit string to number conversion.
+        ${$text_r} =~ s/$match//; 
+            return build_token("NUMBER", $match+0, $line); #MATCH is being implicitly converted to a number.
     }
-     return ();
+    #If no match is found, returns an empty list. This can be treated by the calling function.
+    return ();
 }
 
 sub scan_identifier {
     # scan_identifer (\$TEXT, $LINE)
-    # This functions scans $TEXT for an keyword or identifier.
+    # This functions scans $TEXT for an keyword or identifier token. If one is found, it is consumed and returned.
     my %keywords = (
         "and" => "KW_AND",
         "false" => "KW_FALSE",
@@ -183,61 +186,70 @@ sub scan_identifier {
         "return" => "KW_RETURN",
     );
     (my $text_r, my $line) = @_;
-    if (${$text_r} =~ /^([a-zA-Z_][0-9a-zA-Z_]*)[^0-9a-zA-Z_]/){ #Matches a valid identifier or keyword (contains only alphanumeric characters, not starting with digits).
+    #Matches a valid identifier (possibly a keyword), which can contain only alphanumeric characters, not starting with a digit.
+    if (${$text_r} =~ /^([a-zA-Z_][0-9a-zA-Z_]*)[^0-9a-zA-Z_]/){ 
         my $match = $1;
-        ${$text_r} =~ s/$match//; #Consumes matching characters from input
-        if (exists($keywords{$match})) { #Token is a keyword.
+        #Consumes matching characters from input
+        ${$text_r} =~ s/$match//; 
+        if (exists($keywords{$match})) {
+            #Token is a keyword in this case.
             return build_token($keywords{$match}, "None", $line);
         }
         #Token is not a keyword, so it's interpreted as an identifier.
         return build_token("IDENTIFIER", $match, $line);
     }
+    #If no match is found, returns an empty list. This can be treated by the calling function.
     return ();
 }
 
 sub skip_whitespace {
     # skip_whitespace (\$TEXT, \$LINE)
     # This function receives $TEXT, passed by reference, and consumes an arbitrary amount of leading whitespace.
-    # $LINE is incremented for each character \n found.
-    # Returns the amount of leading whitespace skipped. 
+    # Returns the amount of leading whitespace skipped. This can be treated by the calling function. 
     (my $text_r, my $line_r) = @_;
-    ${$text_r} =~ s/^(\s*)//; #Removes leading whitespace from $text.
+    #Matches all leading whitespace.
+    ${$text_r} =~ s/^(\s*)//; 
     my $match = $1;
-    ${$line_r} += ($match =~ tr/\n//); #Increments $line_r.
+    #Increments LINE for each '\n' found.
+    ${$line_r} += ($match =~ tr/\n//); 
     return length($match);
 }
 
 sub skip_comment {
     # skip_comment (\$TEXT, \$LINE)
+    # Consumes leading comment from input.
     # Returns 1 if at least one comment section was skipped, 0 otherwise. 
     (my $text_r, my $line_r) = @_;
     my $had_comment = 0;
     # A loop is used so sequences of comments can be properly skipped.
-    #print ("Text before skipping: \'\n${$text_r}\n'\n\n");
     while (${$text_r} =~ /^(\-\-\[\[.*\]\])/s #Matches multi-line comment of the form --[[comment ]]
             or ${$text_r} =~ /^(\-\-.*)/ #Matches single-line comment of the of the form --coment
     ){
-    #print ("In this?\nThen \$match = \'$1\'\n\n");
     $had_comment = 1;
     my $match = $1;
-    ${$line_r} += ($match =~ tr/\n//); #Increments $line_r.
-    my $escaped_match = quotemeta($match); #This is necessary so, in the substitution line below, special characters like / and ( are properly escaped.
-    ${$text_r} =~ s/$escaped_match//; #Consumes matching characters from input
+    #Increments LINE for each '\n' found.
+    ${$line_r} += ($match =~ tr/\n//);
+    #This is necessary so, in the substitution line below, special characters like / and ( are properly escaped.
+    my $escaped_match = quotemeta($match); 
+    ${$text_r} =~ s/$escaped_match//;
     }
     return $had_comment;
 }
 
 sub skip_meaningless {
-    # skip_comment (\$TEXT, \$LINE)
+    # skip_meaningless (\$TEXT, \$LINE)
+    # Consumes leading whitespace and comments from input.
     (my $text_r, my $line_r) = @_;
     my $skipped = 1;
     while ($skipped) {
+        #Loops while either whitespace or comment is found.
         $skipped = skip_comment($text_r, $line_r) + skip_whitespace($text_r, $line_r);
     }
 }
 
 sub get_next_token {
     # get_next_token (\$TEXT, $LINE)
+    # Uses the auxiliary functions "scan_xxx" to consume and return a token from input.
     (my $text_r, my $line) = @_;
     my %token;
     %token = scan_symbols($text_r, $line);
@@ -248,50 +260,36 @@ sub get_next_token {
     return %token if %token;
     %token = scan_identifier($text_r, $line);
     return %token if %token;
+    #If no valid token is found, returns an ERROR token which can be treated by the calling function.
     return build_token("ERROR", "Unrecognized lexeme.", $line);
 }
 
 sub tokenize_input {
     # tokenize_input ($FILENAME)
-    # FUTURAMENTE ESSA FUNCAO VAI SER A INTERFACE COM C++
+    # Lexer's main function. Currently prints all tokens from input file $FILENAME. When the parser and evaluator are implemented, this function will instead return the tokens, in a codified form, to the C++ program.
     my %token;
-    my $line = 1;
     my $filename = shift;
-    my $text = read_file($filename); #Reads source code from input file.
-    $text = "$text "; #Appending a whitespace allows for some cleaner regex while never altering the functionality.
+    my $text = read_file($filename);
+    #Storing line position is useful for better error messages.
+    my $line = 1;
+    #Appends a whitespace to the end of source code, as this allows some cleaner regex.
+    $text = "$text ";
     skip_meaningless(\$text, \$line);
-    while (length($text)) { #Loops while there are characthers left in the string.
+    #Loops while there are characthers left in the input, consuming a token in each iteration.
+    while (length($text)) { 
         %token = get_next_token(\$text, $line);
-        parser_error($filename, $token{"line"}, $token{"value"}) if $token{"type"} eq "ERROR";
-        print (stringify_token(%token), "\n"); #futuramente, trocar esse print e o de baixo por insert numa lista de tokens, que tem que ser retornada para o C++
+        #If an error is encountered, lexing stops.
+        return parser_error($filename, $token{"line"}, $token{"value"}) if $token{"type"} eq "ERROR";
+        print (stringify_token(%token), "\n");
         skip_meaningless(\$text, \$line);
     }
+    #Builds an EOS token after scanning input. This facilitates parsing, which will be done by the C++ program.
     %token = build_token("EOS", "None", $line);
     print (stringify_token(%token), "\n");
     print ("\nScanning of '$filename' sucessfully completed.\n");
+    return 0;
 }
 
-############################# EVERYTHING BELOW IS JUST FOR TESTING, NOT INCLUDED IN FINAL CODE
-
-
-my $TESTING = 0;
-if (!$TESTING) {
-    my $_FILENAME = shift @ARGV;
-    if (!$_FILENAME){
-        $_FILENAME = "input.txt";
-    }
-    print_text(read_file($_FILENAME));
-    tokenize_input($_FILENAME);
-}
-else {
-    my $_FILENAME = shift @ARGV;
-    print_text(read_file($_FILENAME));
-    tokenize_input($_FILENAME);
-    # Do some test
-}
-
-sub print_text {
-    #Deletar essa funcao depois, é só uma helper
-    my $text = shift @_;
-    print ("\"$text\"\n\n");
-}
+my $_FILENAME = shift @ARGV; 
+die("Fatal Error: No input files.\nUsage: perl $0 <input_file>\n") if (!$_FILENAME);
+tokenize_input($_FILENAME);
