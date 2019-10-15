@@ -341,7 +341,7 @@ class Parser {
             // comparison ->    addition ( ( ">" | ">=" | "<" | "<=" | "==" | "~=" ) addition )* ;
             Expr *expr = addition();
             Expr *right;
-            string token_types[6] = {"GREATER", "GREATER_EQUAL", "LESS", "LESS_EQUAL", "DOUBLE_EQUAL", "NOT_EQUAL"};
+            string token_types[6] = {"GREATER", "GREATER_EQUAL", "LESSER", "LESS_EQUAL", "DOUBLE_EQUAL", "NOT_EQUAL"};
             while (check(token_types, 6)) {
                 Token op = advance();
                 right = addition();
