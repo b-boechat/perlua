@@ -1,9 +1,5 @@
-while -- comment
- --[[ this
-is
-a
-multiline
-comment]]
-
-
-) > >=
+254
+"rrraaa"
+if
+for
+while ...

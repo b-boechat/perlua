@@ -1,5 +1,48 @@
+package lualexer;
+
+use 5.026001;
 use strict;
 use warnings;
+use Carp;
+
+require Exporter;
+
+our @ISA = qw(Exporter);
+
+# Items to export into callers namespace by default. Note: do not export
+# names by default without a very good reason. Use EXPORT_OK instead.
+# Do not simply export all your public functions/methods/constants.
+
+# This allows declaration	use lualexer ':all';
+# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
+# will save memory.
+our %EXPORT_TAGS = ( 'all' => [ qw(
+	
+) ] );
+
+our @EXPORT_OK = qw (
+    read_file
+    parser_error
+    build_token
+    stringify_token
+    scan_symbols
+    scan_string
+    scan_number
+    scan_identifier
+    skip_whitespace
+    skip_comment
+    skip_meaningless
+    get_next_token
+    tokenize_input
+);
+
+our @EXPORT = qw(
+	
+);
+
+our $VERSION = '0.01';
+
+# Lexer functions below ==========
 
 sub read_file {
     # read_file ($FILENAME)
@@ -21,7 +64,7 @@ sub parser_error {
     # parser_error ($FILENAME, $LINE, $ERROR_MESSAGE)
     # Prints error message and stops source parsing.
     (my $filename, my $line, my $error_message) = @_;
-    print ("{File '$filename', line $line} PARSER ERROR: $error_message");
+    print ("{File '$filename', line $line} Parser Error: $error_message\n");
     return 1;
 }
 
@@ -269,6 +312,10 @@ sub tokenize_input {
     # Lexer's main function. Currently prints all tokens from input file $FILENAME. When the parser and evaluator are implemented, this function will instead return the tokens, in a codified form, to the C++ program.
     my %token;
     my $filename = shift;
+    if (!$filename) {
+        print("Fatal Error: No input files.\n");
+        return 2;
+    }
     my $text = read_file($filename);
     #Storing line position is useful for better error messages.
     my $line = 1;
@@ -290,6 +337,7 @@ sub tokenize_input {
     return 0;
 }
 
-my $_FILENAME = shift @ARGV; 
-die("Fatal Error: No input files.\nUsage: perl $0 <input_file>\n") if (!$_FILENAME);
-tokenize_input($_FILENAME);
+# Lexer ends here =================
+
+1;
+__END__

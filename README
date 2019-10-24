@@ -1,1 +1,13 @@
-A simple interpreter for a subset of Lua, written in C++ and Perl.
+O módulo foi testado e funcionou corretamente no Ubuntu 18.04 e no macOS Mojave 10.14. 
+A versão de Perl utilizada foi 5.26.1
+
+No macOS, a biblioteca pôde ser utilizada após o comando:
+  >> export PERL5LIB=/[...]/lib/perl5/x86_64-linux-gnu-thread-multi
+(Substuindo pelo caminho completo)
+
+No Ubuntu, o comando acima também pode ser utilizado, ou, além dele, também funciona:
+  >> export PERL5LIB=/[...]/lib/perl5
+
+Não há necessidade de instalação de nenhum módulo externo.
+
+Autores: Bernardo Boechat e João Pedro Soares

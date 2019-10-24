@@ -1,36 +1,16 @@
-function pack( ... )
-    return arg
-end
+-- Arquivo sample2.lua
 
-function memoize( fn )
-    local function fnKey( ... )
-        local key = ""
-        for i = 1, table.getn( arg ) do
-            key = key .. "[" .. tostring( arg[ i ] ) .. "]"
-        end
-        return key 
+function multiplicar_por_2000(n)
+    dois_mil = 2e3
+    for i = 1, 19 do
+        b = "Esse loop só existe\nPara fins didáticos"
+        len_b = #b
+        print (len_b)
     end
+    --[[ Comentário
 
-    local object = {
-        __call  = function( targetTable, ... )
-            local key = fnKey( ... )
-            local values = targetTable.__memoized[ key ]
+    de múltiplas
 
-            if ( values == nil ) then
-                values = pack( fn( ... ) )
-                targetTable.__memoized[ key ] = values
-            end
-
-            if ( table.getn( values ) > 0 ) then
-                return unpack( values )
-            end
-
-            return nil
-        end,
-        __forget = function( self ) self.__memoized = {} end,
-        __memoized = {},
-        __mode = "v",
-    }
-
-    return setmetatable( object, object )
+    linhas ]]
+    return dois_mil * n
 end
