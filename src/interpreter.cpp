@@ -1,19 +1,20 @@
 #include <string>
 #include <iostream>
-#include <fstream> // open
 #include <EXTERN.h>
 #include <perl.h>
 
-#include <vector>
-#include <math.h> // floor
+
+#include "token.h"
 #include "data.h"
+#include "parser.h"
+#include "expr.h"
 
 using namespace std;
 
 PerlInterpreter *my_perl;
 
 int main (int argc, char** argv, char** env) {
-    char *embedding[] = {"", "-e", "O"};
+    char *embedding[] = {"", "-e", "O", NULL};
     PERL_SYS_INIT3(&argc, &argv, &env);
     my_perl = perl_alloc();
     perl_construct(my_perl);
@@ -26,11 +27,11 @@ int main (int argc, char** argv, char** env) {
     perl_destruct(my_perl);
     perl_free(my_perl);
     PERL_SYS_TERM();
-/*    Parser parser(codified_tokens.c_str());
-    parser.print_tokens();
+    Parser parser(codified_tokens.c_str());
+    //parser.print_tokens();
     Expr *expr = parser.parse();
     LuaData *data = expr->interpret();
-    cout << data->eval_number() << endl;*/
+    cout << data->eval_number() << endl;
     return 0;
 
 }

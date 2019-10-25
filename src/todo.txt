@@ -1,0 +1,4 @@
+TODO Adicionar concatenacao de strings com ..
+TODO Adidionar relacionais.
+TODO Passar o nome do arquivo fonte para o parser, pra poder melhorar as mensagens de erro.
+

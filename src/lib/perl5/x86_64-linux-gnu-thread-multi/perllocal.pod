@@ -1,0 +1,22 @@
+=head2 Thu Oct 24 21:25:10 2019: C<Module> L<lualexer|lualexer>
+
+=over 4
+
+=item *
+
+C<installed into: /home/boechat/modules/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.01>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

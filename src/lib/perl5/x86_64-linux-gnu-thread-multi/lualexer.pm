@@ -1,3 +1,55 @@
+package lualexer;
+
+use 5.026001;
+use strict;
+use warnings;
+use Carp;
+
+require Exporter;
+
+our @ISA = qw(Exporter);
+
+# Items to export into callers namespace by default. Note: do not export
+# names by default without a very good reason. Use EXPORT_OK instead.
+# Do not simply export all your public functions/methods/constants.
+
+# This allows declaration	use lualexer ':all';
+# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
+# will save memory.
+our %EXPORT_TAGS = ( 'all' => [ qw(
+	
+) ] );
+
+our @EXPORT_OK = qw (
+    return_two
+    read_file
+    parser_error
+    build_token
+    stringify_token
+    append_token
+    scan_symbols
+    scan_string
+    scan_number
+    scan_identifier
+    skip_whitespace
+    skip_comment
+    skip_meaningless
+    get_next_token
+    tokenize_input
+);
+
+our @EXPORT = qw(
+	
+);
+
+# Lexer functions below ==========
+
+sub return_two {
+    print 2;
+    return 2;
+}
+
+
 sub read_file {
     # read_file ($FILENAME)
     # FILENAME is passed as a string. This function returns the text content of the file.
@@ -48,11 +100,11 @@ sub stringify_token {
 sub append_token {
     # codify_token ($CODIFIED_TOKENS, \%TOKEN)
     # DOC DOC DOC
-    (my $c_tokens, $token_r) = @_;
-    my $type = $token->{type};
-    my $value = $token->{value};
-    my $line = $token->{line};
-    $c_tokens = $c_tokens.$type."\0".$value."\0".$line."\0";
+    (my $c_tokens, my $token_r) = @_;
+    my $type = $token_r->{type};
+    my $value = $token_r->{value};
+    my $line = $token_r->{line};
+    $c_tokens = $c_tokens.$type."\003".$value."\003".$line."\003";
     $c_tokens = $c_tokens."\0" if $type eq "EOS";
     return $c_tokens;
 }
@@ -297,14 +349,22 @@ sub tokenize_input {
         %token = get_next_token(\$text, $line);
         #If an error is encountered, lexing stops.
         return parser_error($filename, $token{"line"}, $token{"value"}) if $token{"type"} eq "ERROR";
-        print (stringify_token(%token), "\n");
+        #print (stringify_token(%token), "\n");
         $codified_tokens = append_token($codified_tokens, \%token);
         skip_meaningless(\$text, \$line);
     }
     #Builds an EOS token after scanning input. This facilitates parsing, which will be done by the C++ program.
     %token = build_token("EOS", "None", $line);
-    print (stringify_token(%token), "\n");
+    #print (stringify_token(%token), "\n");
     $codified_tokens = append_token($codified_tokens, \%token);
-    print ("\nScanning of '$filename' sucessfully completed.\n");
+    #print ("\nScanning of '$filename' sucessfully completed.\n");
     return $codified_tokens;
 }
+
+
+# Lexer ends here ==========
+
+
+our $VERSION = '0.01';
+
+1;
