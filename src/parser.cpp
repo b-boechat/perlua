@@ -138,9 +138,9 @@ Expr* Parser::unary() {
 }
 Expr* Parser::primary() {
     if (check("KW_FALSE", true)) 
-        return new BooleanLiteral(luaFalse);
+        return new BooleanLiteral(false);
     if (check("KW_TRUE", true)) 
-        return new BooleanLiteral(luaTrue);
+        return new BooleanLiteral(true);
     if (check("KW_NIL", true)) 
         return new NilLiteral();
     if (check("STRING"))
@@ -155,6 +155,6 @@ Expr* Parser::primary() {
         }
         return new Grouping(expr);
     }
-    error("Expected expression!", EXPECTED_EXPR);
+    error("Invalid syntax.", INVALID_SYNTAX);
     return new NilLiteral();
 }

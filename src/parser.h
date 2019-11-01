@@ -47,6 +47,7 @@ class Parser {
         // Error handling is done by function "error".
 
         // Prints an error message to the user and sets error flag.
+        // TODO Ler arquivo error.h, isso aqui vai melhorar ainda.
         Expr* error(std::string message, ErrorType error); 
 
         // Actual expression parsing is done by the functions "expression", "comparison", "addition" ....

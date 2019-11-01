@@ -10,7 +10,7 @@ all: interpreter.out
 PROGRAMOBJS = interpreter.o parser.o expr.o data.o
 
 interpreter.o: interpreter.cpp
-	$(CC) -c $< $(CCFLAGS) -Wwrite-strings
+	$(CC) -c $< $(CCFLAGS)
 
 parser.o: parser.cpp
 	$(CC) -c $< $(CCFLAGS)
