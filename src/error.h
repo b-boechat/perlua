@@ -1,0 +1,6 @@
+#ifndef ERROR_H_INCLUDED
+#define ERROR_H_INCLUDED 1
+
+enum ErrorType {OK, EXPECTED_EXPR, EXPECTED_CLOSING_PAR};
+
+#endif

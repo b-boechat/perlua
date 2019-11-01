@@ -1,7 +1,9 @@
 CC=g++
-CCFLAGS=-Wall -std=c++11 $(shell perl -MExtUtils::Embed -e ccopts)
+CCFLAGS=-Wall -std=c++11 \
+			$(shell perl -MExtUtils::Embed -e ccopts)
 LD=g++
-LDFLAGS=-Wall -std=c++11 $(shell perl -MExtUtils::Embed -e ldopts)
+LDFLAGS=-Wall -std=c++11 \
+			$(shell perl -MExtUtils::Embed -e ldopts)
 
 all: interpreter.out
 
@@ -17,20 +19,11 @@ expr.o: expr.cpp
 	$(CC) -c $< $(CCFLAGS)
 
 data.o: data.cpp
-	$(CC) -c $< $(CFLAGS)
+	$(CC) -c $< $(CCFLAGS)
 
 #LDFLAGS tem que ser depois por algum motivo
 interpreter.out: $(PROGRAMOBJS)
 	$(LD) -o $@ $(PROGRAMOBJS) $(LDFLAGS)
-
-
-
-token.o: token.cpp
-	$(CC) -o $@ -c $< $(CCFLAGS)
-
-token.out: token.o
-	$(LD) -o $@ $? $(LDFLAGS)
-
 
 clean:
 	rm *.o *.out

@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include "token.h"
+#include "error.h"
 #include "data.h"
 #include "parser.h"
 
@@ -32,6 +33,8 @@ void Parser::print_tokens() {
         cout << "Line " << to_string((tokens.at(i)).line) << ", Token {" << (tokens.at(i)).type << ", " << (tokens.at(i)).value << "}" << endl;
     }
 }
+
+ErrorType Parser::get_error() { return error_state; }
 
 
 // Private functions:
@@ -81,9 +84,10 @@ bool Parser::is_at_end() {
 }
 
 
-void Parser::error(string message) {
-    cout << "Parser Error. Line: " << to_string(peek().line) << ". " << message << endl << "Parsing aborted, program will not be executed." << endl;
-    exit (1); // Mudar isso depois
+Expr* Parser::error(string message, ErrorType error) {
+    cout << "Parser Error. Line: " << to_string(peek().line) << ". " << message << endl << "Program will not be executed." << endl;
+    error_state = error; 
+    return NULL; // Mudar isso depois
 }
 
 
@@ -147,10 +151,10 @@ Expr* Parser::primary() {
         advance();
         Expr *expr = expression();
         if (!check("PAR_CLOSE", true)) {
-            error("Invalid expression: expected closing parenthesis!");
+            error("Invalid expression: expected closing parenthesis!", EXPECTED_CLOSING_PAR);
         }
         return new Grouping(expr);
     }
-    error("Expected expression!");
+    error("Expected expression!", EXPECTED_EXPR);
     return new NilLiteral();
 }

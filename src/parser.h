@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "token.h"
+#include "error.h"
 #include "expr.h"
 
 #define SEPARATOR '\003'
@@ -16,10 +17,13 @@ class Parser {
 
         Expr* parse();
         void print_tokens();
+        ErrorType get_error();
 
     private:
         std::vector <Token> tokens; // Vector of tokens, this is what's going to be parsed.
         unsigned long pos; // Points to current token, while parsing.
+        ErrorType error_state;
+
         // Helper function used by the constructor.
         std::string read_segment (const char* tokens_stream, unsigned long *i);
 
@@ -42,8 +46,8 @@ class Parser {
 
         // Error handling is done by function "error".
 
-        // Prints an error message to the user and aborts the program.
-        void error(std::string message); 
+        // Prints an error message to the user and sets error flag.
+        Expr* error(std::string message, ErrorType error); 
 
         // Actual expression parsing is done by the functions "expression", "comparison", "addition" ....
 

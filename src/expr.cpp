@@ -10,10 +10,12 @@ Expr::~Expr() {};
 
 // ===== BINARY =====
 Binary::Binary(Expr* left_, Token op_, Expr* right_) : left(left_), right(right_), op(op_) {}
-Binary::~Binary() { delete (left); delete (right); }
+Binary::~Binary() { if (left) delete (left); if (right) delete (right); }
 LuaData* Binary::interpret() {
     LuaData *leftData = left->interpret();
     LuaData *rightData = right->interpret();
+
+    // ==== Arithmetic operators:
     // Binary '-' expects two number operands and returns their subtraction. 
     if (op.type == "MINUS") return new LuaNumber(leftData->eval_number() - rightData->eval_number());
     // Binary '+' expects two number operands and returns their sum.
@@ -24,6 +26,12 @@ LuaData* Binary::interpret() {
     else if (op.type == "SLASH") return new LuaNumber(leftData->eval_number() / rightData->eval_number());
     // Binary '//' expects two number operands and returns their integer division.
     else if (op.type == "DOUBLE_SLASH") return new LuaNumber(floor(leftData->eval_number() / rightData->eval_number()) );
+    // Binary '%' expects two number operands and returns their division remainder (modulo).
+    //else if (op.type == "PERCENT") return new LuaNumber(leftData->eval_number() % rightData->eval_number());
+    // Binary '^' expects two number operands and returns their exponentiation. PRECISO ADICIONAR O PARSE DISSO.
+    //else if (op.type == "CIRCUMFLEX") return new LuaNumber(pow(leftData->eval_number(), rightData->eval_number()));
+
+    // ===== Relational operators:
     // Binary '==' returns equality between two values. Equality in Lua is explained in helper function "isEqual".
     else if (op.type == "DOUBLE_EQUAL") return new LuaBoolean(isEqual(leftData, rightData));
     // Binary '~=' returns opposite of equality between two values.
@@ -57,11 +65,12 @@ LuaSpecialValue Binary::isNotEqual(LuaData *left, LuaData *right) {
     // Returns the Lua boolean opposite of "isEqual".
     return (isEqual(left, right) == luaTrue? luaFalse : luaTrue);
 }
+
 // ==========
 
 // ===== UNARY =====
 Unary::Unary(Token op_, Expr* right_) : op(op_), right(right_) {}
-Unary::~Unary() {delete (right);}
+Unary::~Unary() {if (right) delete (right);}
 LuaData* Unary::interpret() {
     LuaData *rightData = right->interpret();
     // Unary '-' expects a number as operand and returns its additive inverse.
@@ -79,7 +88,7 @@ LuaData* Unary::interpret() {
 
 // ===== GROUPING =====
 Grouping::Grouping(Expr* expr_) : expr(expr_) {}
-Grouping::~Grouping() {delete (expr);}
+Grouping::~Grouping() {if (expr) delete (expr);}
 LuaData* Grouping::interpret() {
     return expr->interpret();
 }
@@ -88,7 +97,7 @@ LuaData* Grouping::interpret() {
 
 // ===== NUMBER LITERAL =====
 NumberLiteral::NumberLiteral(double value) {data = new LuaNumber(value);}
-NumberLiteral::~NumberLiteral() {delete(data);}
+NumberLiteral::~NumberLiteral() {if (data) delete(data);}
 LuaData* NumberLiteral::interpret() {
     return data;
 }
@@ -97,7 +106,7 @@ LuaData* NumberLiteral::interpret() {
 
 // ===== STRING LITERAL =====
 StringLiteral::StringLiteral(string value) {data = new LuaString(value);}
-StringLiteral::~StringLiteral() {delete(data);}
+StringLiteral::~StringLiteral() {if (data) delete(data);}
 LuaData* StringLiteral::interpret() {
     return data;
 }
@@ -105,7 +114,7 @@ LuaData* StringLiteral::interpret() {
 
 // ===== BOOLEAN LITERAL =====
 BooleanLiteral::BooleanLiteral(LuaSpecialValue value) {data = new LuaBoolean(value);}
-BooleanLiteral::~BooleanLiteral() {delete(data);}
+BooleanLiteral::~BooleanLiteral() {if (data) delete(data);}
 LuaData* BooleanLiteral::interpret()  {
     return data;
 }
@@ -113,7 +122,7 @@ LuaData* BooleanLiteral::interpret()  {
 
 // ===== NIL LITERAL =====
 NilLiteral::NilLiteral() {data = new LuaNil();}
-NilLiteral::~NilLiteral() {delete(data);}
+NilLiteral::~NilLiteral() {if (data) delete(data);}
 LuaData* NilLiteral::interpret() {
     return data;
 }

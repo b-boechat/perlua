@@ -1,4 +1,5 @@
 #include <string>
+#include <stdio.h> // strcpy
 #include <iostream>
 #include <EXTERN.h>
 #include <perl.h>
@@ -12,9 +13,29 @@
 using namespace std;
 
 PerlInterpreter *my_perl;
+char** set_embedding() {
+    char** embedding = new char*[4];
+    for (int i = 0; i < 3; ++i) {
+        // A memoria só aloca até i = 2 porque o embedding[3] é NULL.
+        embedding[i] = new char[2];
+    }
+    strcpy(embedding[0], "");
+    strcpy(embedding[1], "-e");
+    strcpy(embedding[2], "0");
+    embedding[3] = NULL;
+    return embedding;
+}
+
+void delete_embedding(char** embedding) {
+    for (int i = 0; i < 3; ++i)
+        delete[](embedding[i]);
+    delete[] embedding;
+}
+
+
 
 int main (int argc, char** argv, char** env) {
-    char *embedding[] = {"", "-e", "O", NULL};
+    char **embedding = set_embedding();
     PERL_SYS_INIT3(&argc, &argv, &env);
     my_perl = perl_alloc();
     perl_construct(my_perl);
@@ -23,15 +44,15 @@ int main (int argc, char** argv, char** env) {
     perl_run(my_perl);
     SV *val = eval_pv("use lualexer; $a = return lualexer::tokenize_input(\"input.txt\");", TRUE);
     string codified_tokens(SvPV_nolen(val));
-    //cout << "Len: " << codified_tokens.length() << endl;
     perl_destruct(my_perl);
     perl_free(my_perl);
     PERL_SYS_TERM();
+    delete_embedding(embedding);
     Parser parser(codified_tokens.c_str());
     //parser.print_tokens();
     Expr *expr = parser.parse();
     LuaData *data = expr->interpret();
-    cout << data->eval_number() << endl;
+    cout << "O resultado é " << data->eval_number() << endl;
     return 0;
 
 }
