@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "token.h"
-#include "error.h"
+#include "fake_error.h"
 #include "expr.h"
 
 #define SEPARATOR '\003'
@@ -16,7 +16,7 @@ class Parser {
         Parser(const char* tokens_stream);
 
         Expr* parse();
-        void print_tokens();
+        void print_tokens() const;
         ErrorType get_error();
 
     private:
@@ -25,7 +25,7 @@ class Parser {
         ErrorType error_state;
 
         // Helper function used by the constructor.
-        std::string read_segment (const char* tokens_stream, unsigned long *i);
+        std::string read_segment (const char* tokens_stream, unsigned long *i) const;
 
         // Token vector navigation is done by the helper functions "check", "peek", "advance" and "is_at_end".
 
@@ -37,12 +37,12 @@ class Parser {
         bool check(std::string type, bool consume_token=false);
 
         // Gets current token without advancing "pos".
-        Token peek();
+        Token peek() const;
         // Consumes and returns current token.
         Token advance();
 
         // Checks if currently at end of input. 
-        bool is_at_end();
+        bool is_at_end() const;
 
         // Error handling is done by function "error".
 
@@ -52,17 +52,23 @@ class Parser {
 
         // Actual expression parsing is done by the functions "expression", "comparison", "addition" ....
 
-        // expression ->    comparison
+        // expression ->    logic_or
+        // logic_or ->      logic_and ("or" logic_and)*
+        // logic_and ->     comparison ("and" logic_and)*
         // comparison ->    addition ( ( ">" | ">=" | "<" | "<=" | "==" | "~=" ) addition )* ;
         // addition ->      multiplication ( ( "-" | "+" ) multiplication )*
-        // multiplication ->    unary ( ( "/" | "*" | "//" ) unary )*
-        // unary ->             ( ( "-", "#", "not" ) unary ) | primary
+        // multiplication ->    unary ( ( "/" | "*" | "//" | "%" ) unary )*
+        // unary ->             ( ( "-", "#", "not" ) unary ) | exponentiation
+        // exponentiation -> (primary "^" exponentiation ) | primary
         // primary ->   "false" | "true" | "nil" | STRING | NUMBER | "(" expression ")" 
         Expr* expression();
+        Expr* logic_or();
+        Expr* logic_and();
         Expr* comparison();
         Expr* addition();
         Expr* multiplication();
         Expr* unary();
+        Expr* exponentiation();
         Expr* primary();
 
 };

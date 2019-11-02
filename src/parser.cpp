@@ -2,7 +2,7 @@
 #include <vector>
 #include <iostream>
 #include "token.h"
-#include "error.h"
+#include "fake_error.h"
 #include "data.h"
 #include "parser.h"
 
@@ -26,7 +26,7 @@ Expr* Parser::parse() {
     return expression();
 }
 
-void Parser::print_tokens() {
+void Parser::print_tokens() const {
     size_t i;
     size_t size = tokens.size();
     for (i = 0; i < size; ++i) {
@@ -38,7 +38,7 @@ ErrorType Parser::get_error() { return error_state; }
 
 
 // Private functions:
-string Parser::read_segment (const char* tokens_stream, unsigned long *i) {
+string Parser::read_segment (const char* tokens_stream, unsigned long *i) const {
     string result = "";
     for (; tokens_stream[*i] != SEPARATOR; ++(*i)) {
         result += tokens_stream[*i];
@@ -68,7 +68,7 @@ bool Parser::check(string type, bool consume_token /*=false*/ ) {
     return false;
 }
 
-Token Parser::peek() {
+Token Parser::peek() const {
     return tokens.at(pos);
 }
 
@@ -79,7 +79,7 @@ Token Parser::advance() {
     return tokens.at(pos-1);
 }
 
-bool Parser::is_at_end() {
+bool Parser::is_at_end() const {
     return peek().type == "EOS";
 }
 
@@ -90,10 +90,33 @@ Expr* Parser::error(string message, ErrorType error) {
     return NULL; // Mudar isso depois
 }
 
-
+////////
 Expr* Parser::expression() {
-    return comparison();
+    return logic_or();
 }
+
+Expr* Parser::logic_or() {
+    Expr *expr = logic_and();
+    Expr *right;
+    while (check("KW_OR")) {
+        Token op = advance();
+        right = logic_and();
+        expr = new Binary(expr, op, right);
+    }
+    return expr;
+}
+
+Expr* Parser::logic_and() {
+    Expr *expr = comparison();
+    Expr *right;
+    while (check("KW_AND")) {
+        Token op = advance();
+        right = comparison();
+        expr = new Binary(expr, op, right);
+    }
+    return expr;
+}
+
 Expr* Parser::comparison() {
     Expr *expr = addition();
     Expr *right;
@@ -119,8 +142,8 @@ Expr* Parser::addition() {
 Expr* Parser::multiplication() {
     Expr *expr = unary();
     Expr *right;
-    string token_types[3] = {"SLASH", "STAR", "DOUBLE_SLASH"};
-    while (check(token_types, 3)) {
+    string token_types[4] = {"SLASH", "STAR", "DOUBLE_SLASH", "PERCENT"};
+    while (check(token_types, 4)) {
         Token op = advance();
         right = unary();
         expr = new Binary(expr, op, right);
@@ -134,27 +157,40 @@ Expr* Parser::unary() {
         Expr *right = unary();
         return new Unary(op, right);
     }
-    return primary();
+    return exponentiation();
 }
+
+Expr* Parser::exponentiation() {
+    Expr *expr = primary();
+    if (check("CIRCUMFLEX")) {
+        Token op = advance();
+        Expr *right = exponentiation();
+        expr = new Binary(expr, op, right);
+    }
+    return expr;
+}
+
 Expr* Parser::primary() {
     if (check("KW_FALSE", true)) 
-        return new BooleanLiteral(false);
+        return new Literal(false);
     if (check("KW_TRUE", true)) 
-        return new BooleanLiteral(true);
+        return new Literal(true);
     if (check("KW_NIL", true)) 
-        return new NilLiteral();
+        return new Literal();
     if (check("STRING"))
-        return new StringLiteral(advance().value);
+        return new Literal(advance().value);
     if (check("NUMBER"))
-        return new NumberLiteral(stod(advance().value));
+        return new Literal(stod(advance().value));
     if (check("PAR_OPEN")) {
         advance();
         Expr *expr = expression();
         if (!check("PAR_CLOSE", true)) {
+            cout << "Current token: {" << peek().type << ", " << peek().value << "}." << endl;
             error("Invalid expression: expected closing parenthesis!", EXPECTED_CLOSING_PAR);
+            exit(1);
         }
         return new Grouping(expr);
     }
     error("Invalid syntax.", INVALID_SYNTAX);
-    return new NilLiteral();
+    return NULL;
 }

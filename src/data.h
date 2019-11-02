@@ -1,5 +1,11 @@
 #ifndef DATA_H_INCLUDED
 #define DATA_H_INCLUDED 1
+
+// These macros are useful for retreiving values with less verbosity.
+#define STR(data) (*(data.get_value().lua_str))
+#define NUM(data) (data.get_value().lua_num)
+#define BOOL(data) (data.get_value().lua_bool)
+
 #include <string>
 
 
@@ -19,9 +25,14 @@ class Data {
         Data();
         // Specific constructors for each type of data.
         Data(double number);
+        Data(size_t number);
         Data(bool boolean);
         Data(const char* str);
+        // Copy constructor.
+        Data(const Data& data);
         ~Data();
+        LuaType get_type() const;
+        Value get_value() const;
     private:
         LuaType type;
         Value value;

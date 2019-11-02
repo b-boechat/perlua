@@ -1,14 +1,14 @@
 #include <string>
-#include <stdio.h> // strcpy
+#include <stdio.h> // strncpy
 #include <iostream>
 #include <EXTERN.h>
 #include <perl.h>
-
 
 #include "token.h"
 #include "data.h"
 #include "parser.h"
 #include "expr.h"
+#include "evaluator.h"
 
 using namespace std;
 
@@ -20,9 +20,9 @@ char** set_embedding() {
         // A memoria só aloca até i = 2 porque o embedding[3] é NULL.
         embedding[i] = new char[2];
     }
-    strcpy(embedding[0], "");
-    strcpy(embedding[1], "-e");
-    strcpy(embedding[2], "0");
+    strncpy(embedding[0], "", 1);
+    strncpy(embedding[1], "-e", 3);
+    strncpy(embedding[2], "0", 2);
     embedding[3] = NULL;
     return embedding;
 }
@@ -49,11 +49,27 @@ int main (int argc, char** argv, char** env) {
     perl_free(my_perl);
     PERL_SYS_TERM();
     delete_embedding(embedding);
+
     Parser parser(codified_tokens.c_str());
-    //parser.print_tokens();
+    parser.print_tokens();
     Expr *expr = parser.parse();
-    LuaData *data = expr->interpret();
-    cout << "O resultado é " << data->eval_number() << endl;
+    cout << "Here." << endl;
+    Evaluator evaluator(expr);
+    cout << "Here2." << endl;
+    Data result = evaluator.run();
+    cout << "Now here." << endl;
+    cout << "O resultado é ";
+    switch (result.get_type()) {
+        case NUMBER:
+            cout << NUM(result) << endl;
+        break;
+        case STRING:
+            cout << STR(result) << endl;
+        case BOOLEAN:
+            cout << (BOOL(result) == true? "true" : "false") << endl;
+        case NIL:
+            cout << "nil" << endl;
+    }
     return 0;
 
 }
