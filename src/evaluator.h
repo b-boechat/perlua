@@ -13,6 +13,7 @@ class Evaluator {
         Data evaluate(const Expr* expr) const;
 
         Data evaluate_binary(Binary binary) const;
+        Data evaluate_logical(Logical logical) const;
         Data evaluate_unary(Unary unary) const;
         Data evaluate_grouping(Grouping grouping) const;
         Data evaluate_literal(Literal literal) const;

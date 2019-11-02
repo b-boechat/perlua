@@ -101,7 +101,7 @@ Expr* Parser::logic_or() {
     while (check("KW_OR")) {
         Token op = advance();
         right = logic_and();
-        expr = new Binary(expr, op, right);
+        expr = new Logical(expr, op, right);
     }
     return expr;
 }
@@ -112,7 +112,7 @@ Expr* Parser::logic_and() {
     while (check("KW_AND")) {
         Token op = advance();
         right = comparison();
-        expr = new Binary(expr, op, right);
+        expr = new Logical(expr, op, right);
     }
     return expr;
 }

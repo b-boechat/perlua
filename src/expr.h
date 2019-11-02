@@ -5,7 +5,7 @@
 #include "token.h"
 #include "data.h"
 
-enum ExprType {BINARY, UNARY, GROUPING, LITERAL};
+enum ExprType {BINARY, LOGICAL, UNARY, GROUPING, LITERAL};
 
 
 class Expr {
@@ -27,6 +27,15 @@ class Binary : virtual public Expr {
         const Expr *left, *right;
         const Token op;
 };
+
+class Logical : virtual public Expr {
+    public:
+        Logical(Expr* left_, Token op_, Expr* right_);
+        ~Logical();
+        const Expr *left, *right;
+        const Token op;
+};
+
 class Unary : virtual public Expr {
     public:
         Unary(Token op_, Expr* right_);

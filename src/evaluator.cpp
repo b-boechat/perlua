@@ -21,6 +21,8 @@ Data Evaluator::evaluate(const Expr* expr) const {
     switch (type) {
         case BINARY:
             return evaluate_binary(*(dynamic_cast<const Binary*>(expr)));
+        case LOGICAL:
+            return evaluate_logical(*(dynamic_cast<const Logical*>(expr)));
         case UNARY:
             return evaluate_unary(*(dynamic_cast<const Unary*>(expr)));
         case GROUPING:
@@ -47,16 +49,29 @@ Data Evaluator::evaluate_unary(Unary unary) const {
         //
         return Data(-NUM(right));
     }
-    else if (op_type == "HASH") {
+    if (op_type == "HASH") {
         // TODO Fazer as checagens de tipo corretamente
         if (right.get_type() != STRING) cout << "Tipo errado!!! 09dqdofd" << endl;
         //
         return Data(STR(right).size());
     }
-    else if (op_type == "KW_NOT") {
+    if (op_type == "KW_NOT") {
         return Data(!is_truthy(right));
     }
     cout << "Should not be here!! ad2109ddk" << endl;
+    return Data();
+}
+
+Data Evaluator::evaluate_logical(Logical logical) const {
+    Data left = evaluate(logical.left);
+    string op_type = logical.op.type;
+    if (op_type == "KW_OR") {
+        return (is_truthy(left)? Data(left) : evaluate(logical.right) );
+    }
+    if (op_type == "KW_AND") {
+        return (is_truthy(left)? evaluate(logical.right) : Data(left));
+    }
+    cout << "should never be here! 0d30d" << endl;
     return Data();
 }
 
@@ -64,58 +79,52 @@ Data Evaluator::evaluate_binary(Binary binary) const {
     Data left = evaluate(binary.left);
     Data right = evaluate(binary.right);
     string op_type = binary.op.type;
-    if (op_type == "KW_OR") {
-        return (is_truthy(left)? Data(left) : Data(right));
-    }
-    else if (op_type == "KW_AND") {
-        return (is_truthy(left)? Data(right) : Data(left));
-    }
-    else if (op_type == "DOUBLE_EQUAL") {
+    if (op_type == "DOUBLE_EQUAL") {
         return Data(is_equal(left, right));
     }
-    else if (op_type == "NOT_EQUAL") {
+    if (op_type == "NOT_EQUAL") {
         return Data(!is_equal(left, right));
     }
-    else if (op_type == "LESSER") {
+    if (op_type == "LESSER") {
         return Data(is_lesser(left, right));
     }
-    else if (op_type == "GREATER") {
+    if (op_type == "GREATER") {
         // TODO tipo em todos os relacionais
         return Data(is_lesser(right, left));
     }
-    else if (op_type == "GREATER_EQUAL") {
+    if (op_type == "GREATER_EQUAL") {
         return Data(!is_lesser(left, right));
     }
-    else if (op_type == "LESSER_EQUAL") {
+    if (op_type == "LESSER_EQUAL") {
         return Data(!is_lesser(right, left));
     }
-    else if (op_type == "MINUS") {
+    if (op_type == "MINUS") {
         // TODO tipo
         return Data(NUM(left) - NUM(right));
     }
-    else if (op_type == "PLUS") {
+    if (op_type == "PLUS") {
         // TODO tipo
         return Data(NUM(left) + NUM(right));
     }
-    else if (op_type == "SLASH") {
+    if (op_type == "SLASH") {
         // TODO tipo. TODO tratar divisão por 0.
         return Data(NUM(left) / NUM(right));
 
     }
-    else if (op_type == "STAR") {
+    if (op_type == "STAR") {
         // TODO tipo
         return Data(NUM(left) * NUM(right));
 
     }
-    else if (op_type == "DOUBLE_SLASH") {
+    if (op_type == "DOUBLE_SLASH") {
         // TODO tipo. TODO tratar divisão por zero.
         return Data(floor(NUM(left)/NUM(right)));
     }
-    else if (op_type == "PERCENT") {
+    if (op_type == "PERCENT") {
         // TODO tipo. TODO tratar divisão por zero.
         return Data(NUM(left) - floor(NUM(left)/NUM(right)) * NUM(right));
     }
-    else if (op_type == "CIRCUNFLEX") {
+    if (op_type == "CIRCUNFLEX") {
         // TODO tipo. TODO tratar 0^0.
         return Data(pow(NUM(left), NUM(right)));
     }
