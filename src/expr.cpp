@@ -12,19 +12,47 @@ Expr::~Expr() {};
 
 // ===== BINARY =====
 Binary::Binary(Expr* left_, Token op_, Expr* right_) : Expr(BINARY), left(left_), right(right_), op(op_) {}
-Binary::~Binary() { if (left) delete (left); if (right) delete (right); }
+Binary::~Binary() { 
+    if (left) { 
+        delete (left);
+        left = NULL;
+    }   
+    if (right) {
+        delete (right);
+        right = NULL;
+    }
+}
 
 // ===== LOGICAL =====
 Logical::Logical(Expr* left_, Token op_, Expr* right_) : Expr(LOGICAL), left(left_), right(right_), op(op_) {}
-Logical::~Logical() { if (left) delete (left); if (right) delete (right); }
+Logical::~Logical() { 
+    if (left) { 
+        delete (left);
+        left = NULL;
+    }   
+    if (right) {
+        delete (right);
+        right = NULL;
+    }
+}
 
 // ===== UNARY =====
 Unary::Unary(Token op_, Expr* right_) : Expr(UNARY), right(right_), op(op_) {}
-Unary::~Unary() {if (right) delete (right);}
+Unary::~Unary() { 
+    if (right) { 
+        delete (right);
+        right = NULL;
+    }
+}
 
 // ===== GROUPING =====
 Grouping::Grouping(Expr* expr_) : Expr(GROUPING), expr(expr_) {}
-Grouping::~Grouping() {if (expr) delete (expr);}
+Grouping::~Grouping() { 
+    if (expr) { 
+        delete (expr);
+        expr = NULL;
+    }
+}
 
 // ===== LITERALS =====
 

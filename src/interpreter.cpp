@@ -53,20 +53,22 @@ int main (int argc, char** argv, char** env) {
     Parser parser(codified_tokens.c_str());
     parser.print_tokens();
     Expr *expr = parser.parse();
-    cout << "Here." << endl;
+//    cout << "Here." << endl;
     Evaluator evaluator(expr);
-    cout << "Here2." << endl;
+ //   cout << "Here2." << endl;
     Data result = evaluator.run();
-    cout << "Now here." << endl;
-    cout << "O resultado é ";
+ //   cout << "Now here." << endl;
+  //  cout << "O resultado é ";
     switch (result.get_type()) {
         case NUMBER:
             cout << NUM(result) << endl;
         break;
         case STRING:
             cout << STR(result) << endl;
+        break;
         case BOOLEAN:
             cout << (BOOL(result) == true? "true" : "false") << endl;
+        break;
         case NIL:
             cout << "nil" << endl;
     }

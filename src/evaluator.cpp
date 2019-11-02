@@ -32,15 +32,15 @@ Data Evaluator::evaluate(const Expr* expr) const {
     }
 }
 
-Data Evaluator::evaluate_literal(Literal literal) const {
+Data Evaluator::evaluate_literal(const Literal &literal) const {
     return literal.data;
 }
 
-Data Evaluator::evaluate_grouping(Grouping grouping) const {
+Data Evaluator::evaluate_grouping(const Grouping &grouping) const {
     return evaluate(grouping.expr);
 }
 
-Data Evaluator::evaluate_unary(Unary unary) const {
+Data Evaluator::evaluate_unary(const Unary &unary) const {
     Data right = evaluate(unary.right); 
     string op_type = unary.op.type;
     if (op_type == "MINUS") {
@@ -62,7 +62,7 @@ Data Evaluator::evaluate_unary(Unary unary) const {
     return Data();
 }
 
-Data Evaluator::evaluate_logical(Logical logical) const {
+Data Evaluator::evaluate_logical(const Logical &logical) const {
     Data left = evaluate(logical.left);
     string op_type = logical.op.type;
     if (op_type == "KW_OR") {
@@ -75,7 +75,7 @@ Data Evaluator::evaluate_logical(Logical logical) const {
     return Data();
 }
 
-Data Evaluator::evaluate_binary(Binary binary) const {
+Data Evaluator::evaluate_binary(const Binary &binary) const {
     Data left = evaluate(binary.left);
     Data right = evaluate(binary.right);
     string op_type = binary.op.type;
@@ -124,7 +124,7 @@ Data Evaluator::evaluate_binary(Binary binary) const {
         // TODO tipo. TODO tratar divisão por zero.
         return Data(NUM(left) - floor(NUM(left)/NUM(right)) * NUM(right));
     }
-    if (op_type == "CIRCUNFLEX") {
+    if (op_type == "CIRCUMFLEX") {
         // TODO tipo. TODO tratar 0^0.
         return Data(pow(NUM(left), NUM(right)));
     }
