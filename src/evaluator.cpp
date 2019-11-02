@@ -135,7 +135,7 @@ Data Evaluator::evaluate_binary(const Binary &binary) const {
 
 
 
-bool Evaluator::is_truthy(Data data) const {
+bool Evaluator::is_truthy(const Data& data) const {
     // In Lua, everything is truthy except for false and nil. This includes number 0 and empty strings.
     LuaType type = data.get_type();
     switch (type) {
@@ -151,7 +151,7 @@ bool Evaluator::is_truthy(Data data) const {
     return false;
 }
 
-bool Evaluator::is_equal(Data left, Data right) const {
+bool Evaluator::is_equal(const Data& left, const Data& right) const {
     LuaType type = left.get_type();
     if (right.get_type() != type)
         return false;
@@ -169,7 +169,7 @@ bool Evaluator::is_equal(Data left, Data right) const {
     return false;
 }
 
-bool Evaluator::is_lesser(Data left, Data right) const {
+bool Evaluator::is_lesser(const Data& left, const Data& right) const {
     // TODO Checagem de tipo aqui ou lá
     LuaType type = left.get_type();
     switch (type) {

@@ -151,10 +151,9 @@ sub scan_symbols {
         ".." => "DOUBLE_DOT",
         "..." => "TRIPLE_DOT",
     ); 
-
     if (${$text_r} =~ /^([,+*|%#&\^;(){}])/ #Matches tokens: COMMA, PLUS, STAR, VERTICAL_BAR, PERCENT, HASH, AMPERSEND, CIRCUMFLEX, SEMICOLON, PAR_OPEN, PAR_CLOSE, CURLY_OPEN, CURLY_CLOSE
         or ${$text_r} =~ /^(\/)[^\/]/ #Matches token SLASH
-        or ${$text_r} =~ /^(\-)[^\-]/ #Matches token MINUS, COLON
+        or ${$text_r} =~ /^(\-)[^\-]/ #Matches token MINUS
         or ${$text_r} =~ /^(:)[^:]/ #Matches token COLON
         or ${$text_r} =~ /^(\:\:)/ #Matches token DOUBLE_COLON
         or ${$text_r} =~ /^(\/\/)/ #Matches token DOUBLE_SLASH
@@ -345,7 +344,7 @@ sub tokenize_input {
     $text = "$text ";
     skip_meaningless(\$text, \$line);
     #Loops while there are characthers left in the input, consuming a token in each iteration.
-    while (length($text)) { 
+    while (length($text)) {
         %token = get_next_token(\$text, $line);
         #If an error is encountered, lexing stops.
         return parser_error($filename, $token{"line"}, $token{"value"}) if $token{"type"} eq "ERROR";

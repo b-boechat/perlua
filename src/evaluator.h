@@ -19,9 +19,9 @@ class Evaluator {
         Data evaluate_literal(const Literal& literal) const;
 
         // Checks for truthiness of type, needed in comparison operators, resolving conditions and unary not.
-        bool is_truthy(Data data) const;
-        bool is_equal(Data left, Data right) const;
-        bool is_lesser(Data left, Data right) const;
+        bool is_truthy(const Data& data) const;
+        bool is_equal(const Data& left, const Data& right) const;
+        bool is_lesser(const Data& left, const Data& right) const;
         
         Expr* expr_; // TODO: This will later be a list of statements. Currently the interpreter is just a calculator.
 };
