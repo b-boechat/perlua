@@ -3,6 +3,7 @@
 
 #include <string>
 #include "token.h"
+#include "visitor.h"
 #include "data.h"
 
 enum ExprType {BINARY, LOGICAL, UNARY, GROUPING, LITERAL};
@@ -13,7 +14,8 @@ class Expr {
     public:
         Expr(ExprType type_);
         ExprType get_type() const;
-        virtual ~Expr(); // https://stackoverflow.com/questions/461203/when-to-use-virtual-destructors
+        virtual ~Expr(); 
+        virtual Data accept(const ExprVisitor* visitor) const = 0;
         // Saves expression type, useful to the evaluator.
         ExprType type;
 };
@@ -24,6 +26,7 @@ class Binary : virtual public Expr {
         Binary(Expr* left_, Token op_, Expr* right_);
         // A destructor is necessary to delete the nested Expression nodes.
         ~Binary();
+        Data accept(const ExprVisitor* visitor) const override;
         const Expr *left, *right;
         const Token op;
 };
@@ -32,6 +35,7 @@ class Logical : virtual public Expr {
     public:
         Logical(Expr* left_, Token op_, Expr* right_);
         ~Logical();
+        Data accept(const ExprVisitor* visitor) const override;
         const Expr *left, *right;
         const Token op;
 };
@@ -40,6 +44,7 @@ class Unary : virtual public Expr {
     public:
         Unary(Token op_, Expr* right_);
         ~Unary();
+        Data accept(const ExprVisitor* visitor) const override;
         const Expr *right;
         const Token op;
 };
@@ -48,6 +53,7 @@ class Grouping : virtual public Expr {
     public:
         Grouping(Expr* expr_);
         ~Grouping();
+        Data accept(const ExprVisitor* visitor) const override;
         const Expr *expr;
 };
 
@@ -58,6 +64,7 @@ class Literal : virtual public Expr {
         Literal(std::string value);
         Literal(bool value);
         Literal();
+        Data accept(const ExprVisitor* visitor) const override;
         const Data data;
 };
 

@@ -17,30 +17,18 @@ Data Evaluator::run() const {
 }
 
 Data Evaluator::evaluate(const Expr* expr) const {
-    ExprType type = expr->get_type();
-    switch (type) {
-        case BINARY:
-            return evaluate_binary(*(dynamic_cast<const Binary*>(expr)));
-        case LOGICAL:
-            return evaluate_logical(*(dynamic_cast<const Logical*>(expr)));
-        case UNARY:
-            return evaluate_unary(*(dynamic_cast<const Unary*>(expr)));
-        case GROUPING:
-            return evaluate_grouping(*(dynamic_cast<const Grouping*>(expr)));
-        default: // case LITERAL
-            return evaluate_literal(*(dynamic_cast<const Literal*>(expr)));
-    }
+    return expr->accept(this);
 }
 
-Data Evaluator::evaluate_literal(const Literal &literal) const {
+Data Evaluator::visit_literal(const Literal &literal) const {
     return literal.data;
 }
 
-Data Evaluator::evaluate_grouping(const Grouping &grouping) const {
+Data Evaluator::visit_grouping(const Grouping &grouping) const {
     return evaluate(grouping.expr);
 }
 
-Data Evaluator::evaluate_unary(const Unary &unary) const {
+Data Evaluator::visit_unary(const Unary &unary) const {
     Data right = evaluate(unary.right); 
     string op_type = unary.op.type;
     if (op_type == "MINUS") {
@@ -62,7 +50,7 @@ Data Evaluator::evaluate_unary(const Unary &unary) const {
     return Data();
 }
 
-Data Evaluator::evaluate_logical(const Logical &logical) const {
+Data Evaluator::visit_logical(const Logical &logical) const {
     Data left = evaluate(logical.left);
     string op_type = logical.op.type;
     if (op_type == "KW_OR") {
@@ -75,7 +63,7 @@ Data Evaluator::evaluate_logical(const Logical &logical) const {
     return Data();
 }
 
-Data Evaluator::evaluate_binary(const Binary &binary) const {
+Data Evaluator::visit_binary(const Binary &binary) const {
     Data left = evaluate(binary.left);
     Data right = evaluate(binary.right);
     string op_type = binary.op.type;

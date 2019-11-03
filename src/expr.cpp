@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <math.h>
+#include "visitor.h"
 #include "expr.h"
 #include "data.h"
 
@@ -22,6 +23,9 @@ Binary::~Binary() {
         right = NULL;
     }
 }
+Data Binary::accept(const ExprVisitor* visitor) const {
+    return visitor->visit_binary(*(dynamic_cast<const Binary*>(this)));
+}
 
 // ===== LOGICAL =====
 Logical::Logical(Expr* left_, Token op_, Expr* right_) : Expr(LOGICAL), left(left_), right(right_), op(op_) {}
@@ -35,6 +39,9 @@ Logical::~Logical() {
         right = NULL;
     }
 }
+Data Logical::accept(const ExprVisitor* visitor) const {
+    return visitor->visit_logical(*(dynamic_cast<const Logical*>(this)));
+}
 
 // ===== UNARY =====
 Unary::Unary(Token op_, Expr* right_) : Expr(UNARY), right(right_), op(op_) {}
@@ -43,6 +50,9 @@ Unary::~Unary() {
         delete (right);
         right = NULL;
     }
+}
+Data Unary::accept(const ExprVisitor* visitor) const {
+    return visitor->visit_unary(*(dynamic_cast<const Unary*>(this)));
 }
 
 // ===== GROUPING =====
@@ -53,6 +63,9 @@ Grouping::~Grouping() {
         expr = NULL;
     }
 }
+Data Grouping::accept(const ExprVisitor* visitor) const {
+    return visitor->visit_grouping(*(dynamic_cast<const Grouping*>(this)));
+}
 
 // ===== LITERALS =====
 
@@ -60,3 +73,6 @@ Literal::Literal(double value) : Expr(LITERAL), data(value) {}
 Literal::Literal(string value) : Expr(LITERAL), data(value.c_str()) {}
 Literal::Literal(bool value) : Expr(LITERAL), data(value) {}
 Literal::Literal() : Expr(LITERAL), data() {}
+Data Literal::accept(const ExprVisitor* visitor) const {
+    return visitor->visit_literal(*(dynamic_cast<const Literal*>(this)));
+}
