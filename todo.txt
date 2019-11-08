@@ -1,0 +1,7 @@
+TODO Adicionar concatenacao de strings com ..
+TODO Passar o nome do arquivo fonte para o parser, pra poder melhorar as mensagens de erro.
+TODO Além das macros NUM(data) etc., possivelmente criar uma macro EVAL(data) que não depende do tipo.
+TODO Criar as classes de erros e começar a tratá-los com blocos de try catch. Provavelmente terei que usar rethrow pra poder liberar as memórias de ponteiros alocados durante as funções de parsing.
+TODO Strings números e booleans são imutáveis em Lua. Transformá-los em const. http://lua-users.org/wiki/ImmutableObjects
+TODO Ajeitar a formatação de números do print.
+TODO Numeros sao convertidos pra string em tempo de execuçao e vice-versa se for necessário pra uma operação. O mesmo não vale pra boolean e nil.

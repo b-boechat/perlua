@@ -247,6 +247,7 @@ sub scan_identifier {
         "end" => "KW_END",
         "in" => "KW_IN",
         "return" => "KW_RETURN",
+        "print" => "FUNC_PRINT"
     );
     (my $text_r, my $line) = @_;
     #Matches a valid identifier (possibly a keyword), which can contain only alphanumeric characters, not starting with a digit.

@@ -1,17 +1,18 @@
 #ifndef EVALUATOR_H_INCLUDED
 #define EVALUATOR_H_INCLUDED 1
+#include <vector>
 #include "expr.h"
 #include "data.h"
 #include "visitor.h"
 
-class Evaluator : public ExprVisitor {
+class Evaluator : public ExprVisitor, public StmtVisitor {
     friend class Expr; // Allows Expr to acess visit_xxx methods.
     public:
-        Evaluator(Expr* expr);
+        Evaluator(const std::vector<Stmt*>& statements_);
         ~Evaluator();
-        Data run() const;
+        void run() const;
     private:
-        // This method routes evaluation to the correct evaluation method, depending on the expression type.
+        // This method routes expression evaluation to the correct evaluation method, depending on the expression type.
         Data evaluate(const Expr* expr) const;
 
         Data visit_binary(const Binary& binary) const override;
@@ -20,13 +21,23 @@ class Evaluator : public ExprVisitor {
         Data visit_grouping(const Grouping& grouping) const override;
         Data visit_literal(const Literal& literal) const override;
 
-        // Checks for truthiness of type, needed in comparison operators, resolving conditions and unary not.
+        // Expression evaluation helper functions are is_truthy, is_equal and is_lesser.
         bool is_truthy(const Data& data) const;
-        // The functions below check for equality and "lesser". Together, they are sufficient for all relational operators.
         bool is_equal(const Data& left, const Data& right) const;
         bool is_lesser(const Data& left, const Data& right) const;
+
+        // This method routes statement execution to the correct method.
+        void execute(const Stmt* stmt) const;
+
+        void visit_empty(const Empty& empty) const override;
+        void visit_print(const Print& print) const override;
+
+        // Statement execution helper functions are stringify
         
-        Expr* expr_; // TODO: This will later be a list of statements. Currently the interpreter is just a calculator.
+        std::string stringify(const Data& data) const;
+        
+        // TODO doc 
+        const std::vector<Stmt*> statements; 
 };
 
 

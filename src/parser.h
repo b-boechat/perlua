@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 #include "token.h"
-#include "fake_error.h"
 #include "expr.h"
+#include "stmt.h"
 
 #define SEPARATOR '\003'
 
@@ -15,14 +15,12 @@ class Parser {
         It also sets pos to 0, which means we start parsing at the beginning of the vector. */
         Parser(const char* tokens_stream);
 
-        Expr* parse();
+        std::vector <Stmt*> parse();
         void print_tokens() const;
-        ErrorType get_error();
 
     private:
         std::vector <Token> tokens; // Vector of tokens, this is what's going to be parsed.
         unsigned long pos; // Points to current token, while parsing.
-        ErrorType error_state;
 
         // Helper function used by the constructor.
         std::string read_segment (const char* tokens_stream, unsigned long *i) const;
@@ -44,13 +42,7 @@ class Parser {
         // Checks if currently at end of input. 
         bool is_at_end() const;
 
-        // Error handling is done by function "error".
-
-        // Prints an error message to the user and sets error flag.
-        // TODO Ler arquivo error.h, isso aqui vai melhorar ainda.
-        Expr* error(std::string message, ErrorType error); 
-
-        // Actual expression parsing is done by the functions "expression", "comparison", "addition" ....
+        // Expression parsing is done by the functions "expression", "comparison", "addition" ....
 
         // expression ->    logic_or
         // logic_or ->      logic_and ("or" logic_and)*
@@ -70,6 +62,18 @@ class Parser {
         Expr* unary();
         Expr* exponentiation();
         Expr* primary();
+
+        // Statement parsing.
+        
+        // program -> (statement)*
+        // statement -> empty
+        // empty -> ";" | print
+        // print -> "print" "(" arguments? ")"
+        // arguments -> expression ( "," expression)*
+
+        Stmt* statement();        
+        Stmt* empty();
+        Stmt* print();
 
 };
 

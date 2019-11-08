@@ -6,16 +6,16 @@ using namespace std;
 
 Data::Data() : type(NIL) {} // Nil doesn't need a explicit value, since it only has one.
 
-Data::Data(double number) : type(NUMBER) {
-    value.lua_num = number;
+Data::Data(double num_) : type(NUMBER) {
+    value.lua_num = num_;
 }
 
-Data::Data(size_t number) : type(NUMBER) {
-    value.lua_num = static_cast<double>(number);
+Data::Data(size_t num_) : type(NUMBER) {
+    value.lua_num = static_cast<double>(num_);
 }
 
-Data::Data(const char* str) : type(STRING) {
-    value.lua_str = new string(str);
+Data::Data(const char* str_) : type(STRING) {
+    value.lua_str = new string(str_);
 }
 
 Data::Data(bool bool_) : type(BOOLEAN) {

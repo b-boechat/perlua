@@ -24,10 +24,10 @@ class Data {
         // Default constructor; constructs nil.
         Data();
         // Specific constructors for each type of data.
-        Data(double number);
-        Data(size_t number);
-        Data(bool boolean);
-        Data(const char* str);
+        Data(double num_);
+        Data(size_t num_);
+        Data(bool bool_);
+        Data(const char* str_);
         // Copy constructor.
         Data(const Data& data);
         ~Data();

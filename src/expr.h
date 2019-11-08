@@ -1,6 +1,12 @@
 #ifndef EXPR_H_INCLUDED
 #define EXPR_H_INCLUDED 1
 
+/*
+ * This header defines the Expresson AST nodes, which are created by the parser and traversed by the evaluator. 
+ */
+
+
+
 #include <string>
 #include "token.h"
 #include "visitor.h"

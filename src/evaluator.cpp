@@ -1,21 +1,28 @@
 #include <iostream>
+#include <vector>
 #include <string>
 #include <math.h> // floor
 #include "token.h"
 #include "expr.h"
+#include "stmt.h"
 #include "data.h"
 #include "evaluator.h"
 
 using namespace std;
 
-Evaluator::Evaluator(Expr* expr): expr_(expr) {}
+Evaluator::Evaluator(const std::vector<Stmt*>& statements_) : statements(statements_) {}
 
-Evaluator::~Evaluator() { if (expr_) delete (expr_); }
+Evaluator::~Evaluator() {}
 
-Data Evaluator::run() const {
-    return evaluate(expr_);
+void Evaluator::run() const {
+    for (auto it = statements.begin(); it != statements.end(); ++it) {
+        execute(*it);
+    }
+    cout << "\n:)" << endl;
 }
 
+
+// =====
 Data Evaluator::evaluate(const Expr* expr) const {
     return expr->accept(this);
 }
@@ -120,8 +127,7 @@ Data Evaluator::visit_binary(const Binary &binary) const {
     return Data();
 }
 
-
-
+// ===== Expression evaluator helper functions
 
 bool Evaluator::is_truthy(const Data& data) const {
     // In Lua, everything is truthy except for false and nil. This includes number 0 and empty strings.
@@ -175,3 +181,40 @@ bool Evaluator::is_lesser(const Data& left, const Data& right) const {
     return false;
 }
 
+// ===== Statement execution
+
+void Evaluator::execute(const Stmt* stmt) const {
+    return stmt->accept(this);
+}
+
+void Evaluator::visit_empty(const Empty& empty) const {
+    // As expected, empty statement does nothing.
+    ;
+}
+
+void Evaluator::visit_print(const Print& print) const {
+    for (auto it = print.args.begin(); it != print.args.end(); ++it) {
+        Data data = evaluate(*it);
+        string str_arg = stringify(data);
+        // By default, Lua "print" separates arguments with a '\t' character and prints a newline after the last one.
+        cout << str_arg << '\t';
+    }
+    cout << endl;
+}
+
+string Evaluator::stringify(const Data& data) const {
+    LuaType type = data.get_type();
+    switch (type) {
+        case STRING:
+            return STR(data);
+        case NIL:
+            return string("nil");
+        case BOOLEAN:
+            return (BOOL(data)? "true" : "false");
+        default:
+            // TODO entender a precisao certinha do Lua pra numeros.
+            return to_string(NUM(data));
+    }
+    cout << "Should noot be heear d09d0." << endl;
+    return "eeeee"; // TODO ajeitar isso ai
+}

@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 #include <stdio.h> // strncpy
 #include <iostream>
 #include <EXTERN.h>
@@ -6,6 +7,7 @@
 
 #include "token.h"
 #include "data.h"
+#include "error.h"
 #include "parser.h"
 #include "expr.h"
 #include "evaluator.h"
@@ -50,29 +52,19 @@ int main (int argc, char** argv, char** env) {
     PERL_SYS_TERM();
     delete_embedding(embedding);
 
+
     Parser parser(codified_tokens.c_str());
     parser.print_tokens();
-    Expr *expr = parser.parse();
-//    cout << "Here." << endl;
-    Evaluator evaluator(expr);
- //   cout << "Here2." << endl;
-    Data result = evaluator.run();
- //   cout << "Now here." << endl;
-  //  cout << "O resultado é ";
-    switch (result.get_type()) {
-        case NUMBER:
-            cout << NUM(result) << endl;
-        break;
-        case STRING:
-            cout << STR(result) << endl;
-        break;
-        case BOOLEAN:
-            cout << (BOOL(result) == true? "true" : "false") << endl;
-        break;
-        case NIL:
-            cout << "nil" << endl;
+    std::vector <Stmt*> statements;
+    try {
+        statements = parser.parse();
     }
+    catch (ParserError &err) {
+        cout << err.what() << endl;
+        exit (1);
+    }
+    Evaluator evaluator(statements);
+    evaluator.run();
     return 0;
-
 }
 
