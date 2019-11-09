@@ -45,7 +45,7 @@ int main (int argc, char** argv, char** env) {
     perl_parse(my_perl, NULL, 3, embedding, NULL);
     PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
     perl_run(my_perl);
-    SV *val = eval_pv("use lualexer; $a = return lualexer::tokenize_input(\"input.txt\");", TRUE);
+    SV *val = eval_pv("use lualexer; $a = return lualexer::tokenize_input(\"input.lua\");", TRUE);
     string codified_tokens(SvPV_nolen(val));
     perl_destruct(my_perl);
     perl_free(my_perl);

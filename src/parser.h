@@ -71,11 +71,18 @@ class Parser {
         // empty -> ";" | print
         // print -> "print" "(" arguments? ")"
         // arguments -> expression ( "," expression)*
+        // global_assigment -> var_list "=" exp_list
+        // var_list -> IDENTIFIER ( "," IDENTIFIER)*
+        // exp_list -> EXPRESSION ( "," EXPRESSION)*
 
         Stmt* block();
         Stmt* statement();        
         Stmt* empty();
         Stmt* print();
+        Stmt* global_assignment();
+
+        std::vector<Token> var_list();
+        std::vector<Expr*> exp_list();
 
 };
 

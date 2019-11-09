@@ -23,3 +23,8 @@ Print::Print(Token keyword_, const std::vector <Expr*> &args_) : keyword(keyword
 void Print::accept(const StmtVisitor* visitor) const { 
     return visitor->visit_print(*(dynamic_cast<const Print*>(this)));
 }
+
+GlobalAssignment::GlobalAssignment(const std::vector<Token> &var_list_, const std::vector<Expr*> &expr_list_) : var_list(var_list_), expr_list(expr_list_) {}
+void GlobalAssignment::accept(const StmtVisitor* visitor) const { 
+    return visitor->visit_global_assignment(*(dynamic_cast<const GlobalAssignment*>(this)));
+}

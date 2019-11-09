@@ -202,14 +202,16 @@ Expr* Parser::primary() {
         return new Literal(advance().value);
     if (check("NUMBER"))
         return new Literal(stod(advance().value));
+    if (check("VARIABLE"))
+        return new Variable(advance());
     if (check("PAR_OPEN")) {
         advance();
         Expr *expr = expression();
         if (!check("PAR_CLOSE", true))
-            throw ExpectedParClose("input.txt", peek().line, "in expression");
+            throw ExpectedParClose("input.lua", peek().line, "in expression");
         return new Grouping(expr);
     }
-    throw ExpectedExpr("input.txt", peek().line);
+    throw ExpectedExpr("input.lua", peek().line);
 }
 
 // ===== Statement parsing.
@@ -224,12 +226,12 @@ Stmt* Parser::statement() {
 }
 
 Stmt* Parser::block() {
-    std::vector<Stmt*> statements;
     if (!check("KW_DO", true))
         return empty();
+    std::vector<Stmt*> statements;
     while (!check("KW_END", true)) {
         if (is_at_end())
-            throw ExpectedEndKw("input.txt", peek().line);
+            throw ExpectedEndKw("input.lua", peek().line);
         statements.push_back(statement());
     }
     return new Block(statements);
@@ -243,22 +245,19 @@ Stmt* Parser::empty() {
 }
 
 Stmt* Parser::print() {
-    vector <Expr*> args;
-    Token keyword;
-    if (!check("FUNC_PRINT")) {
-        // TODO Por enquanto eh erro porque só foi implementado até o print, depois trocar isso por um return do proximo stmt e ir propagando a linha de erro até o último statement implementado.
-        throw InvalidSyntax("input.txt", peek().line);
-    }
+    if (!check("FUNC_PRINT"))
+        throw InvalidSyntax("input.lua", peek().line);
     // Saves the "print" keyword token to allow better (runtime) error messages.
-    keyword = advance();
+    vector <Expr*> args;
+    Token keyword = advance();
     if (!check("PAR_OPEN", true)) {
-        throw ExpectedParOpen("input.txt", peek().line, "after \"print\"");
+        throw ExpectedParOpen("input.lua", peek().line, "after \"print\"");
     }
     // This check is included to allow calling print with no arguments.
     if (!check("PAR_CLOSE", true)) {
         do {
             try {args.push_back(expression());}
-            catch (ParserError& err) {
+            catch (ExpectedExpr& err) {
                 err.set_where("inside \"print\" arguments");
                 throw;
             }
@@ -266,9 +265,48 @@ Stmt* Parser::print() {
         } while (check("COMMA", true));
         if (!check("PAR_CLOSE", true)) {
             // Here, all arguments have been consumed already, so a closing parenthesis is expected.
-            throw ExpectedParClose("input.txt", peek().line, "after list of \"print\" arguments");
+            throw ExpectedParClose("input.lua", peek().line, "after list of \"print\" arguments");
         }
     }
     return new Print(keyword, args);
 }
+
+Stmt* Parser::global_assignment() { 
+    if (!check("IDENTIFIER"))
+        throw InvalidSyntax("input.lua", peek().line);
+    vector<Token> vars;
+    vector<Expr*> exprs;
+    try {vars = var_list();}
+    catch(ExpectedVarIdentifier& err) {
+        err.set_where("in global assignment variable list");
+        throw;
+    }
+    if (!check("EQUAL", true))
+        throw ExpectedEqualSign("input.lua", peek().line, "in global assignment"); 
+    try {exprs = exp_list();}
+    catch(ExpectedExpr& err) {
+        err.set_where("in global assignment expression list");
+        throw;
+    }
+    return new GlobalAssignment(vars, exprs);
+}
+
+vector<Token> Parser::var_list() {
+    vector<Token> vars;
+    do {
+        if (!check("IDENTIFIER"))
+            throw ExpectedVarIdentifier("input.lua", peek().line); 
+        vars.push_back(advance());
+    } while (check("COMMA", true));
+    return vars;
+}
+
+vector<Expr*> Parser::exp_list() {
+    vector<Expr*> exprs;
+    do {
+        exprs.push_back(expression());
+    } while (check("COMMA", true));
+    return exprs;
+}
+
 

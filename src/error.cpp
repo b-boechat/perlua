@@ -31,3 +31,9 @@ ExpectedExpr::ExpectedExpr(const char* filename_, unsigned long line_, const cha
 
 ExpectedEndKw::ExpectedEndKw(const char* filename_, unsigned long line_, const char* where_) :
     ParserError(filename_, line_, "Expected keyword \"end\"", where_) {}
+
+ExpectedVarIdentifier::ExpectedVarIdentifier(const char* filename_, unsigned long line_, const char* where_) :
+    ParserError(filename_, line_, "Expected variable identifier", where_) {}
+
+ExpectedEqualSign::ExpectedEqualSign(const char* filename_, unsigned long line_, const char* where_) :
+    ParserError(filename_, line_, "Expected \"=\"", where_) {}

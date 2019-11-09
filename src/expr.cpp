@@ -67,7 +67,7 @@ Data Grouping::accept(const ExprVisitor* visitor) const {
     return visitor->visit_grouping(*(dynamic_cast<const Grouping*>(this)));
 }
 
-// ===== LITERALS =====
+// ===== LITERAL =====
 
 Literal::Literal(double value) : Expr(LITERAL), data(value) {}
 Literal::Literal(string value) : Expr(LITERAL), data(value.c_str()) {}
@@ -75,4 +75,11 @@ Literal::Literal(bool value) : Expr(LITERAL), data(value) {}
 Literal::Literal() : Expr(LITERAL), data() {}
 Data Literal::accept(const ExprVisitor* visitor) const {
     return visitor->visit_literal(*(dynamic_cast<const Literal*>(this)));
+}
+
+// ===== VARIABLE =====
+
+Variable::Variable(Token id_) : id(id_) {}
+Data Variable::accept(const ExprVisitor* visitor) const {
+    return visitor->visit_variable(*(dynamic_cast<const Variable*>(this)));
 }

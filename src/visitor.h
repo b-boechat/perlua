@@ -12,6 +12,7 @@ class Logical;
 class Unary;
 class Grouping;
 class Literal;
+class Variable;
 
 class ExprVisitor {
     friend class Binary;
@@ -19,6 +20,7 @@ class ExprVisitor {
     friend class Unary;
     friend class Grouping;
     friend class Literal;
+    friend class Variable;
     public:
         virtual ~ExprVisitor() {}
     private:
@@ -27,22 +29,26 @@ class ExprVisitor {
         virtual Data visit_unary(const Unary& unary) const = 0;
         virtual Data visit_grouping(const Grouping& grouping) const = 0;
         virtual Data visit_literal(const Literal& literal) const = 0;
+        virtual Data visit_variable(const Variable& variable) const = 0;
 };
 
 class Block;
 class Empty;
 class Print;
+class GlobalAssignment;
 
 class StmtVisitor {
     friend class Block;
     friend class Empty;
     friend class Print;
+    friend class GlobalAssignment;
     public:
         virtual ~StmtVisitor() {}
     private:
         virtual void visit_block(const Block& block) const = 0;
         virtual void visit_empty(const Empty& empty) const = 0;
         virtual void visit_print(const Print& print) const = 0;
+        virtual void visit_global_assignment(const GlobalAssignment& assignment) const = 0;
 };
 
 #endif

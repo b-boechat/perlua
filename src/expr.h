@@ -74,4 +74,11 @@ class Literal : virtual public Expr {
         const Data data;
 };
 
+class Variable : virtual public Expr {
+    public: 
+        Variable(Token id_);
+        Data accept(const ExprVisitor* visitor) const override;
+        const Token id; 
+};
+
 #endif

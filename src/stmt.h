@@ -16,7 +16,7 @@ class Stmt {
 
 class Block : public Stmt {
     public:
-        Block(const std::vector <Stmt*> &stmts_);
+        Block(const std::vector<Stmt*> &stmts_);
         void accept(const StmtVisitor* visitor) const override;
         const std::vector <Stmt*> stmts;
 };
@@ -30,10 +30,18 @@ class Empty : public Stmt {
 
 class Print : public Stmt {
     public:
-        Print(Token keyword_, const std::vector <Expr*> &args_);
+        Print(Token keyword_, const std::vector<Expr*> &args_);
         void accept(const StmtVisitor* visitor) const override;
         const Token keyword;
         const std::vector <Expr*> args;
+};
+
+class GlobalAssignment : public Stmt {
+    public:
+        GlobalAssignment(const std::vector<Token> &var_list_, const std::vector<Expr*> &expr_list_);
+        void accept(const StmtVisitor* visitor) const override;
+        const std::vector<Token> var_list;
+        const std::vector<Token> expr_list;
 };
 
 #endif

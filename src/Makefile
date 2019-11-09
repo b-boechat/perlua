@@ -7,13 +7,15 @@ LDFLAGS=-Wall -std=c++11 -g \
 
 
 
-all: interpreter.out
+all: interpreter
 
-aux: parser.o expr.o data.o evaluator.o stmt.o error.o
+AUX_OBJS = parser.o expr.o data.o evaluator.o stmt.o error.o
 
-PROGRAMOBJS = parser.o expr.o data.o evaluator.o stmt.o error.o interpreter.o
+aux: $(AUX_OBJS)
 
-interpreter.o: interpreter.cpp
+PROGRAMOBJS = $(AUX_OBJS) main.o
+
+main.o: main.cpp
 	$(CC) -c $< $(CCFLAGS) $(EMBEDCCFLAGS)
 
 parser.o: parser.cpp
@@ -35,8 +37,8 @@ stmt.o: stmt.cpp
 	$(CC) -c $< $(CCFLAGS)
 
 #LDFLAGS tem que ser depois por algum motivo
-interpreter.out: $(PROGRAMOBJS)
+interpreter: $(PROGRAMOBJS)
 	$(LD) -o $@ $(PROGRAMOBJS) $(LDFLAGS)
 
 clean:
-	rm -f *.o *.out
+	rm -f *.o interpreter

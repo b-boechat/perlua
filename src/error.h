@@ -37,5 +37,15 @@ class ExpectedEndKw : virtual public ParserError {
         ExpectedEndKw(const char* filename_, unsigned long line_, const char* where_="");
 };
 
+class ExpectedVarIdentifier : virtual public ParserError {
+    public:
+        ExpectedVarIdentifier(const char* filename_, unsigned long line_, const char* where_="");
+};
+
+class ExpectedEqualSign : virtual public ParserError {
+    public:
+        ExpectedEqualSign(const char* filename_, unsigned long line_, const char* where_="");
+};
+
 
 #endif

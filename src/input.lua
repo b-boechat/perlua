@@ -6,6 +6,5 @@ do
 	do 
 		print (4)
 	end
-	do
 		print (10)
 end
