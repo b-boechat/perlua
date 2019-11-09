@@ -7,12 +7,11 @@ using namespace std;
 Stmt::~Stmt() {}
 
 // ===== BLOCK =====
-/*
-Block::Block(const std::vector <Stmt*> &args_) : args(args_) {}
+
+Block::Block(const std::vector <Stmt*> &stmts_) : stmts(stmts_) {}
 void Block::accept(const StmtVisitor* visitor) const {
     return visitor->visit_block(*(dynamic_cast<const Block*>(this)));
 }
-*/
 
 // ===== EMPTY =====
 Empty::Empty() {}

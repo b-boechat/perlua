@@ -187,6 +187,12 @@ void Evaluator::execute(const Stmt* stmt) const {
     return stmt->accept(this);
 }
 
+void Evaluator::visit_block(const Block& block) const {
+    for (auto it = block.stmts.begin(); it != block.stmts.end(); ++it) {
+        execute(*it);
+    }
+}
+
 void Evaluator::visit_empty(const Empty& empty) const {
     // As expected, empty statement does nothing.
     ;

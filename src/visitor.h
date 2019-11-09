@@ -29,18 +29,18 @@ class ExprVisitor {
         virtual Data visit_literal(const Literal& literal) const = 0;
 };
 
-//class Block;
+class Block;
 class Empty;
 class Print;
 
 class StmtVisitor {
-    //friend class Block;
+    friend class Block;
     friend class Empty;
     friend class Print;
     public:
         virtual ~StmtVisitor() {}
     private:
-        //virtual void visit_block(const Block& block) const = 0;
+        virtual void visit_block(const Block& block) const = 0;
         virtual void visit_empty(const Empty& empty) const = 0;
         virtual void visit_print(const Print& print) const = 0;
 };

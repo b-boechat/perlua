@@ -1,3 +1,11 @@
 print (4, nil, "abc") 
 print (3)
 print (2 ^ ((1.5 + (4 // 3))/0.25))
+do
+	print (2 + 3)
+	do 
+		print (4)
+	end
+	do
+		print (10)
+end

@@ -5,29 +5,37 @@
 
 class ParserError : public std::exception {
     public:
-       virtual const char* what() const throw();
-       std::string message;
+        ParserError(const char* filename_, unsigned long line_, const char* info_, const char* where_="");
+        virtual const char* what() const throw() override;
+        void set_where(const char* where_);
+    private:
+        std::string filename, line, info, where;
 };
 
 class InvalidSyntax : virtual public ParserError {
     public:
-        InvalidSyntax(std::string filename, unsigned long line);
+        InvalidSyntax(const char* filename_, unsigned long line_);
 };
 
 class ExpectedParOpen : virtual public ParserError {
     public:
-        ExpectedParOpen(std::string filename, unsigned long line, std::string where);
+        ExpectedParOpen(const char* filename_, unsigned long line_, const char* where_="");
 };
 
 class ExpectedParClose : virtual public ParserError {
     public:
-        ExpectedParClose(std::string filename, unsigned long line, std::string where);
+        ExpectedParClose(const char* filename_, unsigned long line_, const char* where_="");
 };
 
 class ExpectedExpr : virtual public ParserError {
     public:
-        ExpectedExpr(std::string filename, unsigned long line, std::string where="");
-        // Sometimes context can only be provided after a few rethrows.
-        void add_where(std::string where);
+        ExpectedExpr(const char* filename_, unsigned long line_, const char* where_="");
 };
+
+class ExpectedEndKw : virtual public ParserError {
+    public:
+        ExpectedEndKw(const char* filename_, unsigned long line_, const char* where_="");
+};
+
+
 #endif

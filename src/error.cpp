@@ -2,29 +2,32 @@
 #include <exception>
 #include "error.h"
 
-#define MESSAGE_BEGINNING filename+":"+to_string(line)+": "
-
 
 using namespace std;
 
-const char* ParserError::what() const throw() {return message.c_str();}
+ParserError::ParserError (const char* filename_, unsigned long line_, const char* info_, const char* where_) :
+    filename(filename_), line(to_string(line_)), info(info_), where(where_) {}
 
-InvalidSyntax::InvalidSyntax(string filename, unsigned long line) {
-    message = MESSAGE_BEGINNING+"Invalid syntax.";
-}
-
-ExpectedParOpen::ExpectedParOpen(string filename, unsigned long line, string where) {
-    message = MESSAGE_BEGINNING+"Expected opening parenthesis "+where+".";
-}
-
-ExpectedParClose::ExpectedParClose(string filename, unsigned long line, string where) {
-    message = MESSAGE_BEGINNING+"Expected closing parenthesis "+where+".";
+const char* ParserError::what() const throw() {
+    // Static is necessary here. TODO explicar
+    static string message = filename+":"+line+": "+"Parser Error: "+info+(where==""? "." : " "+where+".");
+    return message.c_str();
 }
 
-ExpectedExpr::ExpectedExpr(string filename, unsigned long line, string where/*=""*/) {
-    // Only appends the ending . if "where" was already specified.
-    message = MESSAGE_BEGINNING+"Expected expression "+where+(where==""?"":".");
-}
-void ExpectedExpr::add_where(string where) {
-    message = message+where+".";
-}
+void ParserError::set_where(const char* where_) { where = where_; }
+
+
+InvalidSyntax::InvalidSyntax(const char* filename_, unsigned long line_) :
+    ParserError(filename_, line_, "Invalid syntax") {}
+
+ExpectedParOpen::ExpectedParOpen(const char* filename_, unsigned long line_, const char* where_) :
+    ParserError(filename_, line_, "Expected opening parenthesis", where_) {}
+
+ExpectedParClose::ExpectedParClose(const char* filename_, unsigned long line_, const char* where_) :
+    ParserError(filename_, line_, "Expected closing parenthesis", where_) {}
+
+ExpectedExpr::ExpectedExpr(const char* filename_, unsigned long line_, const char* where_) :
+    ParserError(filename_, line_, "Expected expression", where_) {}
+
+ExpectedEndKw::ExpectedEndKw(const char* filename_, unsigned long line_, const char* where_) :
+    ParserError(filename_, line_, "Expected keyword \"end\"", where_) {}

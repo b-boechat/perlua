@@ -13,15 +13,14 @@ class Stmt {
         virtual void accept(const StmtVisitor* visitor) const = 0;
 };
 
-/*
-class Block {
+
+class Block : public Stmt {
     public:
-        Block(const std::vector <Stmt*> &args_);
-        void accept(const StmtVisitor* visitor) const;
-    private:
-        std::vector <Stmt*> args;
+        Block(const std::vector <Stmt*> &stmts_);
+        void accept(const StmtVisitor* visitor) const override;
+        const std::vector <Stmt*> stmts;
 };
-*/
+
 
 class Empty : public Stmt {
     public:

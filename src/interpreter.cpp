@@ -54,7 +54,7 @@ int main (int argc, char** argv, char** env) {
 
 
     Parser parser(codified_tokens.c_str());
-    parser.print_tokens();
+    //parser.print_tokens();
     std::vector <Stmt*> statements;
     try {
         statements = parser.parse();

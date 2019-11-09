@@ -29,6 +29,7 @@ class Evaluator : public ExprVisitor, public StmtVisitor {
         // This method routes statement execution to the correct method.
         void execute(const Stmt* stmt) const;
 
+        void visit_block(const Block& block) const override;
         void visit_empty(const Empty& empty) const override;
         void visit_print(const Print& print) const override;
 

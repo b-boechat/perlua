@@ -65,12 +65,14 @@ class Parser {
 
         // Statement parsing.
         
-        // program -> (statement)*
-        // statement -> empty
+        // program -> (statements)*
+        // statement -> block
+        // block -> (do (statements)* end) | empty
         // empty -> ";" | print
         // print -> "print" "(" arguments? ")"
         // arguments -> expression ( "," expression)*
 
+        Stmt* block();
         Stmt* statement();        
         Stmt* empty();
         Stmt* print();

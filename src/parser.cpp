@@ -215,8 +215,26 @@ Expr* Parser::primary() {
 // ===== Statement parsing.
 
 Stmt* Parser::statement() {
-    return empty();
+    try { return block(); }
+    catch (ExpectedEndKw& err) {
+        // If block() was called from here, it is an explicit block (not part of if/while/etc statements).
+        err.set_where("to close explicit block");
+        throw;
+    }
 }
+
+Stmt* Parser::block() {
+    std::vector<Stmt*> statements;
+    if (!check("KW_DO", true))
+        return empty();
+    while (!check("KW_END", true)) {
+        if (is_at_end())
+            throw ExpectedEndKw("input.txt", peek().line);
+        statements.push_back(statement());
+    }
+    return new Block(statements);
+}
+
 
 Stmt* Parser::empty() {
     if (check("SEMICOLON", true))
@@ -227,14 +245,13 @@ Stmt* Parser::empty() {
 Stmt* Parser::print() {
     vector <Expr*> args;
     Token keyword;
-    if (!check("KW_PRINT")) {
+    if (!check("FUNC_PRINT")) {
         // TODO Por enquanto eh erro porque só foi implementado até o print, depois trocar isso por um return do proximo stmt e ir propagando a linha de erro até o último statement implementado.
         throw InvalidSyntax("input.txt", peek().line);
     }
     // Saves the "print" keyword token to allow better (runtime) error messages.
     keyword = advance();
     if (!check("PAR_OPEN", true)) {
-        cout << "Erro aquii!!! k0dkddq" << endl; 
         throw ExpectedParOpen("input.txt", peek().line, "after \"print\"");
     }
     // This check is included to allow calling print with no arguments.
@@ -242,15 +259,14 @@ Stmt* Parser::print() {
         do {
             try {args.push_back(expression());}
             catch (ParserError& err) {
-                //err.add_where("inside \"print\" arguments");
+                err.set_where("inside \"print\" arguments");
                 throw;
             }
 
         } while (check("COMMA", true));
         if (!check("PAR_CLOSE", true)) {
             // Here, all arguments have been consumed already, so a closing parenthesis is expected.
-            cout << "Erroooo. lkd20k" << endl; // TODO
-            throw ExpectedParClose("input.txt", peek().line, "after list of arguments");
+            throw ExpectedParClose("input.txt", peek().line, "after list of \"print\" arguments");
         }
     }
     return new Print(keyword, args);
