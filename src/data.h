@@ -30,11 +30,12 @@ class Data {
         Data(const char* str_);
         // Copy constructor.
         Data(const Data& data);
+
         ~Data();
         LuaType get_type() const;
         Value get_value() const;
     private:
-        LuaType type;
+        const LuaType type;
         Value value;
 };
 

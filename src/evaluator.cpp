@@ -3,6 +3,7 @@
 #include <string>
 #include <math.h> // floor
 #include "token.h"
+#include "environment.h"
 #include "expr.h"
 #include "stmt.h"
 #include "data.h"
@@ -10,11 +11,22 @@
 
 using namespace std;
 
-Evaluator::Evaluator(const std::vector<Stmt*>& statements_) : statements(statements_) {}
+Evaluator::Evaluator(const std::vector<Stmt*>& statements_) : statements(statements_) {
+    // Creates global environment.
+    env = new Environment();
+}
 
-Evaluator::~Evaluator() {}
+Evaluator::~Evaluator() {
+    Environment* aux = env;
+    // Deletes all nested environments.
+    while (env) {
+        env = env->enclosing;
+        delete(aux);
+        aux = env;
+    }
+}
 
-void Evaluator::run() const {
+void Evaluator::run() {
     for (auto it = statements.begin(); it != statements.end(); ++it) {
         execute(*it);
     }
@@ -127,6 +139,10 @@ Data Evaluator::visit_binary(const Binary &binary) const {
     return Data();
 }
 
+Data Evaluator::visit_variable(const Variable &variable) const {
+    return env->get(variable.id.value);
+}
+
 // ===== Expression evaluator helper functions
 
 bool Evaluator::is_truthy(const Data& data) const {
@@ -183,14 +199,22 @@ bool Evaluator::is_lesser(const Data& left, const Data& right) const {
 
 // ===== Statement execution
 
-void Evaluator::execute(const Stmt* stmt) const {
+void Evaluator::execute(const Stmt* stmt) {
     return stmt->accept(this);
 }
 
-void Evaluator::visit_block(const Block& block) const {
+void Evaluator::visit_block(const Block& block) {
+    Environment* previous = env;
+    // Firstly, a new environment is created, with the previous one enclosing it.
+    env = new Environment(previous);
+    // Then, all statements are executed within this new environment.
+    // TODO this will have to be a try block so the new env is deleted.
     for (auto it = block.stmts.begin(); it != block.stmts.end(); ++it) {
         execute(*it);
     }
+    // After execution, the block environment is deleted and the previous one is restored.
+    delete(env);
+    env = previous;
 }
 
 void Evaluator::visit_empty(const Empty& empty) const {
@@ -208,6 +232,42 @@ void Evaluator::visit_print(const Print& print) const {
     cout << endl;
 }
 
+void Evaluator::visit_declaration(const Declaration& declar) const {
+    size_t n_declar = declar.var_list.size();
+    size_t n_exp = declar.expr_list.size();
+    vector<Data> values;
+    // All expressions are evaluated before being attributed.
+    for (size_t i = 0; i < n_declar; ++i) {
+        if (i < n_exp)
+            values.push_back(evaluate(declar.expr_list[i]));
+        // If there are more variables than expressions, nils are appended.
+        // This includes the case where no attribution is made. In this case, n_exp = 0.
+        else
+            values.push_back(Data());
+    }
+    for (size_t i = 0; i < n_declar; ++i) {
+        env->declare(declar.var_list[i], values[i]);
+    }
+}
+
+void Evaluator::visit_assignment(const Assignment& assig) const {
+    // The number of assignments made is the number of variables on the left side, regardless of how many expressions are in the right side.
+    size_t n_assign = assig.var_list.size();
+    size_t n_exp = assig.expr_list.size();
+    vector<Data> values;
+    for (size_t i = 0; i < n_assign; ++i) {
+        if (i < n_exp)
+            values.push_back(evaluate(assig.expr_list[i]));
+        else 
+            values.push_back(Data()); 
+    }
+    for (size_t i = 0; i < n_assign; ++i) {
+        env->assign(assig.var_list[i], values[i]);
+    }
+}
+
+
+// Statement helper functions.
 string Evaluator::stringify(const Data& data) const {
     LuaType type = data.get_type();
     switch (type) {

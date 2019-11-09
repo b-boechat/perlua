@@ -4,13 +4,14 @@
 #include "expr.h"
 #include "data.h"
 #include "visitor.h"
+#include "environment.h"
 
 class Evaluator : public ExprVisitor, public StmtVisitor {
     friend class Expr; // Allows Expr to acess visit_xxx methods.
     public:
         Evaluator(const std::vector<Stmt*>& statements_);
         ~Evaluator();
-        void run() const;
+        void run();
     private:
         // This method routes expression evaluation to the correct evaluation method, depending on the expression type.
         Data evaluate(const Expr* expr) const;
@@ -20,6 +21,7 @@ class Evaluator : public ExprVisitor, public StmtVisitor {
         Data visit_unary(const Unary& unary) const override;
         Data visit_grouping(const Grouping& grouping) const override;
         Data visit_literal(const Literal& literal) const override;
+        Data visit_variable(const Variable& variable) const override;
 
         // Expression evaluation helper functions are is_truthy, is_equal and is_lesser.
         bool is_truthy(const Data& data) const;
@@ -27,11 +29,13 @@ class Evaluator : public ExprVisitor, public StmtVisitor {
         bool is_lesser(const Data& left, const Data& right) const;
 
         // This method routes statement execution to the correct method.
-        void execute(const Stmt* stmt) const;
+        void execute(const Stmt* stmt);
 
-        void visit_block(const Block& block) const override;
+        void visit_block(const Block& block) override;
         void visit_empty(const Empty& empty) const override;
         void visit_print(const Print& print) const override;
+        void visit_declaration(const Declaration& declar) const override; 
+        void visit_assignment(const Assignment& assig) const override; 
 
         // Statement execution helper functions are stringify
         
@@ -39,6 +43,7 @@ class Evaluator : public ExprVisitor, public StmtVisitor {
         
         // TODO doc 
         const std::vector<Stmt*> statements; 
+        Environment* env;
 };
 
 

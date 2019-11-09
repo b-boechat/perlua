@@ -1,10 +1,10 @@
-print (4, nil, "abc") 
-print (3)
-print (2 ^ ((1.5 + (4 // 3))/0.25))
+x = 3
+y = 7
+print (x, y) -- 3   7
 do
-	print (2 + 3)
-	do 
-		print (4)
-	end
-		print (10)
+    local x = "oi"
+    print (x) -- oi
+    x, y = y, x
+    print (x, y) -- 7   oi
 end
+print (x)   -- 3

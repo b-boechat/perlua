@@ -12,7 +12,8 @@
 #include "visitor.h"
 #include "data.h"
 
-enum ExprType {BINARY, LOGICAL, UNARY, GROUPING, LITERAL};
+// Tirar isso depois, é só pra debugging. TODO
+enum ExprType {BINARY, LOGICAL, UNARY, GROUPING, LITERAL, VARIABLE};
 
 
 class Expr {
@@ -76,6 +77,7 @@ class Literal : virtual public Expr {
 
 class Variable : virtual public Expr {
     public: 
+        // TODO talvez não precise de token, e sim de string mesmo.
         Variable(Token id_);
         Data accept(const ExprVisitor* visitor) const override;
         const Token id; 

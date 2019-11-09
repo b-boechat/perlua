@@ -44,12 +44,6 @@ our @EXPORT = qw(
 
 # Lexer functions below ==========
 
-sub return_two {
-    print 2;
-    return 2;
-}
-
-
 sub read_file {
     # read_file ($FILENAME)
     # FILENAME is passed as a string. This function returns the text content of the file.

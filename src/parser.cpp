@@ -202,7 +202,7 @@ Expr* Parser::primary() {
         return new Literal(advance().value);
     if (check("NUMBER"))
         return new Literal(stod(advance().value));
-    if (check("VARIABLE"))
+    if (check("IDENTIFIER"))
         return new Variable(advance());
     if (check("PAR_OPEN")) {
         advance();
@@ -246,7 +246,7 @@ Stmt* Parser::empty() {
 
 Stmt* Parser::print() {
     if (!check("FUNC_PRINT"))
-        throw InvalidSyntax("input.lua", peek().line);
+        return declaration();
     // Saves the "print" keyword token to allow better (runtime) error messages.
     vector <Expr*> args;
     Token keyword = advance();
@@ -271,32 +271,56 @@ Stmt* Parser::print() {
     return new Print(keyword, args);
 }
 
-Stmt* Parser::global_assignment() { 
+Stmt* Parser::declaration() {
+    if (!check("KW_LOCAL", true))
+        return assignment();
+    vector<string> vars;
+    vector<Expr*> exprs;
+    // Parses a list of identifiers as lvalues.
+    try {vars = var_list();}
+    catch(ExpectedVarIdentifier& err) {
+        err.set_where("in local declaration variable list");
+        throw;
+    }
+    // In declarations, attributing initial values is optional.
+    if (!check("SINGLE_EQUAL", true))
+        return new Declaration(vars);
+    // If an equal sign is found, an expression list is expected.
+    try {exprs = exp_list();}
+    catch(ExpectedExpr& err) {
+        err.set_where("in local declaration expression list");
+        throw;
+    }
+    return new Declaration(vars, exprs);
+}
+
+Stmt* Parser::assignment() { 
     if (!check("IDENTIFIER"))
         throw InvalidSyntax("input.lua", peek().line);
-    vector<Token> vars;
+    vector<string> vars;
     vector<Expr*> exprs;
     try {vars = var_list();}
     catch(ExpectedVarIdentifier& err) {
         err.set_where("in global assignment variable list");
         throw;
     }
-    if (!check("EQUAL", true))
+    // In assignments, attributing values is mandatory.
+    if (!check("SINGLE_EQUAL", true))
         throw ExpectedEqualSign("input.lua", peek().line, "in global assignment"); 
     try {exprs = exp_list();}
     catch(ExpectedExpr& err) {
         err.set_where("in global assignment expression list");
         throw;
     }
-    return new GlobalAssignment(vars, exprs);
+    return new Assignment(vars, exprs);
 }
 
-vector<Token> Parser::var_list() {
-    vector<Token> vars;
+vector<string> Parser::var_list() {
+    vector<string> vars;
     do {
         if (!check("IDENTIFIER"))
             throw ExpectedVarIdentifier("input.lua", peek().line); 
-        vars.push_back(advance());
+        vars.push_back(advance().value);
     } while (check("COMMA", true));
     return vars;
 }

@@ -79,7 +79,7 @@ Data Literal::accept(const ExprVisitor* visitor) const {
 
 // ===== VARIABLE =====
 
-Variable::Variable(Token id_) : id(id_) {}
+Variable::Variable(Token id_) : Expr(VARIABLE), id(id_) {}
 Data Variable::accept(const ExprVisitor* visitor) const {
     return visitor->visit_variable(*(dynamic_cast<const Variable*>(this)));
 }

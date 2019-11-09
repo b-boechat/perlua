@@ -22,7 +22,21 @@ Data::Data(bool bool_) : type(BOOLEAN) {
     value.lua_bool = bool_;
 }
 
-Data::Data(const Data& data) : type(data.get_type()), value(data.get_value()) {}
+Data::Data(const Data& data) : type(data.get_type()) {
+    switch (type) {
+        case (STRING):
+            value.lua_str = new string(STR(data));
+        break;
+        case (NUMBER):
+            value.lua_num = NUM(data);
+        break;
+        case (BOOLEAN):
+            value.lua_bool = BOOL(data);
+        break;
+        default: ; // No value assignment is done for nil.
+    }
+}
+
 
 LuaType Data::get_type() const {
     return type;

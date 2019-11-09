@@ -9,7 +9,7 @@ LDFLAGS=-Wall -std=c++11 -g \
 
 all: interpreter
 
-AUX_OBJS = parser.o expr.o data.o evaluator.o stmt.o error.o
+AUX_OBJS = parser.o expr.o data.o evaluator.o stmt.o error.o environment.o
 
 aux: $(AUX_OBJS)
 
@@ -36,7 +36,9 @@ error.o: error.cpp
 stmt.o: stmt.cpp
 	$(CC) -c $< $(CCFLAGS)
 
-#LDFLAGS tem que ser depois por algum motivo
+environment.o: environment.cpp
+	$(CC) -c $< $(CCFLAGS)
+
 interpreter: $(PROGRAMOBJS)
 	$(LD) -o $@ $(PROGRAMOBJS) $(LDFLAGS)
 

@@ -35,20 +35,24 @@ class ExprVisitor {
 class Block;
 class Empty;
 class Print;
-class GlobalAssignment;
+class Assignment;
+class Declaration;
 
 class StmtVisitor {
     friend class Block;
     friend class Empty;
     friend class Print;
-    friend class GlobalAssignment;
+    friend class Declaration;
+    friend class Assignment;
     public:
         virtual ~StmtVisitor() {}
     private:
-        virtual void visit_block(const Block& block) const = 0;
+        // "visit_block" is not const because it (temporarily) alters the environment.
+        virtual void visit_block(const Block& block) = 0;
         virtual void visit_empty(const Empty& empty) const = 0;
         virtual void visit_print(const Print& print) const = 0;
-        virtual void visit_global_assignment(const GlobalAssignment& assignment) const = 0;
+        virtual void visit_declaration(const Declaration& declar) const = 0;
+        virtual void visit_assignment(const Assignment& assig) const = 0;
 };
 
 #endif

@@ -69,19 +69,23 @@ class Parser {
         // statement -> block
         // block -> (do (statements)* end) | empty
         // empty -> ";" | print
-        // print -> "print" "(" arguments? ")"
+        // print -> ("print" "(" arguments? ")" ) | declaration
         // arguments -> expression ( "," expression)*
-        // global_assigment -> var_list "=" exp_list
+        // declaration -> ("local" var_list ("=" exp_list)? ) | assignment
         // var_list -> IDENTIFIER ( "," IDENTIFIER)*
         // exp_list -> EXPRESSION ( "," EXPRESSION)*
+        // assigment -> var_list "=" exp_list
 
         Stmt* block();
         Stmt* statement();        
         Stmt* empty();
         Stmt* print();
-        Stmt* global_assignment();
+        // Declarations are local and can include or not initial values.
+        Stmt* declaration();
+        // If assignment is executed with non existant variables, it creates local ones.
+        Stmt* assignment();
 
-        std::vector<Token> var_list();
+        std::vector<std::string> var_list();
         std::vector<Expr*> exp_list();
 
 };
