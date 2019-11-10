@@ -1,10 +1,5 @@
-x = 4
-x = 3
-x = 2
-if x > 3 then
-    print ("X is bigger than 3!")
-elseif x == 3 then
-    print ("X equals 3!")
-else
-    print ("X is smaller than 3!")
-end
+print (4.449204942094)
+print (47)
+print (4.44400000)
+print (3.12345678901234567890123456)
+print (4443.12345678901234567890123456)

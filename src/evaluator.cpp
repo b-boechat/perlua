@@ -2,6 +2,8 @@
 #include <vector>
 #include <string>
 #include <math.h> // floor
+#include <sstream> // ostringstream
+#include <iomanip> // setprecision
 #include "token.h"
 #include "environment.h"
 #include "expr.h"
@@ -313,10 +315,9 @@ string Evaluator::stringify(const Data& data) const {
             return string("nil");
         case BOOLEAN:
             return (BOOL(data)? "true" : "false");
-        default:
-            // TODO entender a precisao certinha do Lua pra numeros.
-            return to_string(NUM(data));
+        default: // case NUMBER
+            ostringstream out;
+            out << setprecision(13) << NUM(data);
+            return out.str();
     }
-    cout << "Should noot be heear d09d0." << endl;
-    return "eeeee"; // TODO ajeitar isso ai
 }
