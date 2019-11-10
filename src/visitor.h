@@ -32,24 +32,30 @@ class ExprVisitor {
         virtual Data visit_variable(const Variable& variable) const = 0;
 };
 
-class Block;
+class ExplicitBlock;
 class Empty;
+class WhileStmt;
+class IfStmt;
 class Print;
 class Assignment;
 class Declaration;
 
 class StmtVisitor {
-    friend class Block;
+    friend class ExplicitBlock;
     friend class Empty;
+    friend class WhileStmt;
+    friend class IfStmt;
     friend class Print;
     friend class Declaration;
     friend class Assignment;
     public:
         virtual ~StmtVisitor() {}
     private:
-        // "visit_block" is not const because it (temporarily) alters the environment.
-        virtual void visit_block(const Block& block) = 0;
+        // "visit_explicit_block" is not const because it (temporarily) alters the environment.
+        virtual void visit_explicit_block(const ExplicitBlock& block) = 0;
         virtual void visit_empty(const Empty& empty) const = 0;
+        virtual void visit_while_stmt(const WhileStmt& while_stmt) = 0;
+        virtual void visit_if_stmt(const IfStmt& if_stmt) = 0;
         virtual void visit_print(const Print& print) const = 0;
         virtual void visit_declaration(const Declaration& declar) const = 0;
         virtual void visit_assignment(const Assignment& assig) const = 0;

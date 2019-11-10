@@ -203,16 +203,52 @@ void Evaluator::execute(const Stmt* stmt) {
     return stmt->accept(this);
 }
 
-void Evaluator::visit_block(const Block& block) {
+void Evaluator::visit_explicit_block(const ExplicitBlock& block) {
     Environment* previous = env;
-    // Firstly, a new environment is created, with the previous one enclosing it.
     env = new Environment(previous);
-    // Then, all statements are executed within this new environment.
-    // TODO this will have to be a try block so the new env is deleted.
     for (auto it = block.stmts.begin(); it != block.stmts.end(); ++it) {
         execute(*it);
     }
+    delete(env);
+    env = previous;
+}
+
+void Evaluator::visit_while_stmt(const WhileStmt& while_stmt) {
+    while (is_truthy(evaluate(while_stmt.condition)))
+        execute_block(while_stmt.stmts);
+}
+
+void Evaluator::visit_if_stmt(const IfStmt& if_stmt) {
+    size_t n_condits = if_stmt.conditions.size();
+    size_t n_blocks = if_stmt.block_list.size();
+    // Iterates through the if-elseif-else blocks.
+    for (size_t i = 0; i < n_blocks; ++i) {
+        // If i < n_condits, it's an if or elseif block.
+        if (i < n_condits) {
+            // If the condition is satisfied, executes the block then breaks out of the loop (no more condition is checked)
+            if (is_truthy(evaluate(if_stmt.conditions.at(i)))) {
+                execute_block(if_stmt.block_list.at(i));
+                break;
+            }
+        }
+        // If there is an else block, it gets executed (since all if-elseif conditions have been evaluated as false).
+        else
+            execute_block(if_stmt.block_list.at(i));
+    }
+}
+
+
+void Evaluator::execute_block(const vector<Stmt*> &stmts) {
+    Environment* previous = env;
+    // First, a new environment is created, with the previous one enclosing it.
+    env = new Environment(previous);
+    // Then, all statements are executed within this new environment.
+    // TODO this will have to be a try block so the new env is deleted.
+    for (auto it = stmts.begin(); it != stmts.end(); ++it) {
+        execute(*it);
+    }
     // After execution, the block environment is deleted and the previous one is restored.
+    // If a "repeat until" statement is added in the future, deletion can't be done here (because the environment only ends after condition evaluation);
     delete(env);
     env = previous;
 }

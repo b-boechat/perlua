@@ -29,8 +29,8 @@ ExpectedParClose::ExpectedParClose(const char* filename_, unsigned long line_, c
 ExpectedExpr::ExpectedExpr(const char* filename_, unsigned long line_, const char* where_) :
     ParserError(filename_, line_, "Expected expression", where_) {}
 
-ExpectedEndKw::ExpectedEndKw(const char* filename_, unsigned long line_, const char* where_) :
-    ParserError(filename_, line_, "Expected keyword \"end\"", where_) {}
+ExpectedKw::ExpectedKw(const char* filename_, unsigned long line_, const char* where_) :
+    ParserError(filename_, line_, "Expected keyword", where_) {}
 
 ExpectedVarIdentifier::ExpectedVarIdentifier(const char* filename_, unsigned long line_, const char* where_) :
     ParserError(filename_, line_, "Expected variable identifier", where_) {}

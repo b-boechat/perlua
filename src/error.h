@@ -32,9 +32,9 @@ class ExpectedExpr : virtual public ParserError {
         ExpectedExpr(const char* filename_, unsigned long line_, const char* where_="");
 };
 
-class ExpectedEndKw : virtual public ParserError {
+class ExpectedKw : virtual public ParserError {
     public:
-        ExpectedEndKw(const char* filename_, unsigned long line_, const char* where_="");
+        ExpectedKw(const char* filename_, unsigned long line_, const char* where_="");
 };
 
 class ExpectedVarIdentifier : virtual public ParserError {

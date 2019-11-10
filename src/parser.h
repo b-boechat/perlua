@@ -66,9 +66,12 @@ class Parser {
         // Statement parsing.
         
         // program -> (statements)*
-        // statement -> block
-        // block -> (do (statements)* end) | empty
-        // empty -> ";" | print
+        // statement -> explicit_block
+        // explicit_block -> ("do" block "end") | empty
+        // block -> (statements)*
+        // empty -> ";" | while_stmt
+        // while_stmt ("while" expression "do" block "end") | if_stmt
+        // if_stmt ("while" expression "do" block "end") | print
         // print -> ("print" "(" arguments? ")" ) | declaration
         // arguments -> expression ( "," expression)*
         // declaration -> ("local" var_list ("=" exp_list)? ) | assignment
@@ -76,15 +79,18 @@ class Parser {
         // exp_list -> EXPRESSION ( "," EXPRESSION)*
         // assigment -> var_list "=" exp_list
 
-        Stmt* block();
         Stmt* statement();        
+        Stmt* explicit_block();
         Stmt* empty();
+        Stmt* while_stmt();
+        Stmt* if_stmt();
         Stmt* print();
         // Declarations are local and can include or not initial values.
         Stmt* declaration();
         // If assignment is executed with non existant variables, it creates local ones.
         Stmt* assignment();
 
+        std::vector<Stmt*> block(const char* delimiter, const char* sec_delimiter="", const char* third_delimiter="");
         std::vector<std::string> var_list();
         std::vector<Expr*> exp_list();
 

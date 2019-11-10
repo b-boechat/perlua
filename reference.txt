@@ -1,39 +1,6 @@
 Tipagem forte dinamica.
 Gerencia automatica de memoria dinamica.
 
-Keywords/func:
-	- print			> nao sei se eh f ou k)
-	- local 
-	- type			> f
-	- true
-	- false
-	- nil
-	- do
-	- function
-	- end
-	- if
-	- then
-	- else
-	- elseif
-	- while
-	- for
-	- in
-	- return
-	- ipairs, pairs, io.lines >  acho que sao f)
-	- and    > retorna o primeiro se for false ou nil, ou o segundo caso contrario
-	- or	> retorna o primeiro operando que nao for nil ou false
-			and e not nao necessariamente retornam booleano!!
-	- not	> retorna sempre um booleano
-
-
-Tipos:
-	- nil
-	- boolean
-	- number
-	- string		> (tem a sintaxe [[string]] pra declarar)
-	- function	> daqui pra baixo armazenam referencia
-	- table
-	- userdata
 
 https://webserver2.tecgraf.puc-rio.br/lua/local/manual/5.0/manual.html
 
@@ -41,6 +8,11 @@ diferencas:
 	- nao inclui a string poder ter quebra de linha precedido de \
 	- nao inclui especificar caracteres por \numero na string
 	- nao inclui comentarios aninhados
+
+	- nao implementados NaN e inf
+
+OBS: break fora de loop é erro de compilaçao, nao de execuçao!
+
 
 ajuda:
 https://stackoverflow.com/questions/26414835/perl-modify-variable-passed-as-param-to-subroutine

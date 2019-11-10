@@ -31,14 +31,16 @@ class Evaluator : public ExprVisitor, public StmtVisitor {
         // This method routes statement execution to the correct method.
         void execute(const Stmt* stmt);
 
-        void visit_block(const Block& block) override;
+        void visit_explicit_block(const ExplicitBlock& block) override;
         void visit_empty(const Empty& empty) const override;
+        void visit_while_stmt(const WhileStmt& while_stmt) override;
+        void visit_if_stmt(const IfStmt& if_stmt) override;
         void visit_print(const Print& print) const override;
         void visit_declaration(const Declaration& declar) const override; 
         void visit_assignment(const Assignment& assig) const override; 
 
-        // Statement execution helper functions are stringify
-        
+        // Statement execution helper functions are execute_block and stringify.
+        void execute_block(const std::vector<Stmt*> &stmts);
         std::string stringify(const Data& data) const;
         
         // TODO doc 

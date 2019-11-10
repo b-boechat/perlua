@@ -14,9 +14,9 @@ class Stmt {
 };
 
 
-class Block : public Stmt {
+class ExplicitBlock : public Stmt {
     public:
-        Block(const std::vector<Stmt*> &stmts_);
+        ExplicitBlock(const std::vector<Stmt*> &stmts_);
         void accept(StmtVisitor* visitor) const override;
         const std::vector <Stmt*> stmts;
 };
@@ -27,12 +27,28 @@ class Empty : public Stmt {
         void accept(StmtVisitor* visitor) const override;
 };
 
+class WhileStmt : public Stmt {
+    public:
+        WhileStmt(Expr* condition_, const std::vector<Stmt*> &stmts_);
+        void accept(StmtVisitor* visitor) const override;
+        const Expr* condition;
+        const std::vector<Stmt*> stmts;
+};
+
+class IfStmt : public Stmt {
+    public:
+        IfStmt(const std::vector<Expr*> &conditions_, const std::vector<std::vector<Stmt*> > &block_list_); 
+        void accept(StmtVisitor* visitor) const override;
+        const std::vector<Expr*> conditions;
+        const std::vector<std::vector<Stmt*> > block_list;
+};
+
 class Print : public Stmt {
     public:
         Print(Token keyword_, const std::vector<Expr*> &args_);
         void accept(StmtVisitor* visitor) const override;
         const Token keyword;
-        const std::vector <Expr*> args;
+        const std::vector<Expr*> args;
 };
 
 class Assignment : public Stmt {

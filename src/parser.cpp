@@ -217,31 +217,101 @@ Expr* Parser::primary() {
 // ===== Statement parsing.
 
 Stmt* Parser::statement() {
-    try { return block(); }
-    catch (ExpectedEndKw& err) {
-        // If block() was called from here, it is an explicit block (not part of if/while/etc statements).
-        err.set_where("to close explicit block");
-        throw;
-    }
+    return explicit_block();
 }
 
-Stmt* Parser::block() {
+Stmt* Parser::explicit_block() {
     if (!check("KW_DO", true))
         return empty();
     std::vector<Stmt*> statements;
-    while (!check("KW_END", true)) {
-        if (is_at_end())
-            throw ExpectedEndKw("input.lua", peek().line);
-        statements.push_back(statement());
+    try {statements = block("KW_END");}
+    catch (ExpectedKw& err) {
+        err.set_where("\"end\" to close explicit block");
+        throw;
     }
-    return new Block(statements);
+    advance(); // Consumes the KW_END token
+    return new ExplicitBlock(statements);
 }
 
+std::vector<Stmt*> Parser::block(const char* delimiter, const char* sec_delimiter/*=""*/, const char* third_delimiter/*=""*/) {
+    // Delimiter is the keyword that closes the block. It can be "KW_END", "KW_UNTIL", "KW_ELSEIF" or "KW_ELSE", depending on where this function is called.
+    // In Lua grammar, there's a maximum of 3 possible delimiters at once ("KW_END", "KW_ELSEIF" and "KW_ELSE" inside if or elseif blocks)
+    // It's important to note that this function does NOT consume the ending token.
+    std::vector<Stmt*> statements;
+    while (! (check(delimiter) or check(sec_delimiter) or check(third_delimiter))) {
+        if (is_at_end())
+            throw ExpectedKw("input.lua", peek().line);
+        statements.push_back(statement());
+    }
+    return statements;
+}
 
 Stmt* Parser::empty() {
     if (check("SEMICOLON", true))
         return new Empty();
-    return print();
+    return while_stmt();
+}
+
+Stmt* Parser::while_stmt() {
+    if (!check("KW_WHILE", true))
+        return if_stmt();
+    Expr* condition;
+    try {condition = expression();}
+    catch (ExpectedExpr &err) {
+        err.set_where("as \"while\" condition");
+        throw;
+    }
+    if (!check("KW_DO", true))
+        throw ExpectedKw("input.lua", peek().line, "\"do\" after \"while\" condition");
+    std::vector<Stmt*> statements;
+    try {statements = block("KW_END");}
+    catch (ExpectedKw &err) {
+        err.set_where("\"end\" to close \"while\" block");
+        throw;
+    }
+    advance();
+    return new WhileStmt(condition, statements);
+}
+
+Stmt* Parser::if_stmt() {
+    if (!check("KW_IF", true))
+        return print();
+    /* If-elif-else structures are stored as vectors of conditions and blocks.
+    i = 0 Corresponds to if condition and if block. 
+    0 < i < condition_list(size) are elseif condition and blocks.
+    block_list has an optional additional else block (in this case, block_list is one unit bigger than condition_list) 
+    */
+    std::vector<Expr*> condition_list;
+    std::vector<std::vector<Stmt*> > block_list;
+    do {
+        // This loop parses an if-elseif structure.
+        try {condition_list.push_back(expression());}
+        catch (ExpectedExpr &err) {
+            err.set_where((block_list.size()? "as \"elseif\" condition" : "as \"if\" condition"));
+            throw;
+        }
+        if (!check("KW_THEN", true))
+            throw ExpectedKw("input.lua", peek().line, 
+                    (block_list.size()? "\"then\" after \"elseif\" condition" : "\"then\" after \"if\" condition"));
+        try {block_list.push_back(block("KW_ELSEIF", "KW_ELSE", "KW_END"));}
+        catch (ExpectedKw &err) {
+            err.set_where((block_list.size()? "\"end\" to close \"elseif\" block" : "\"end\" to close \"if\" block"));
+            throw;
+        }
+    } while (check("KW_ELSEIF", true));
+    // Parse an additional else structure.
+    if (check("KW_ELSE", true)) {
+        try{block_list.push_back(block("KW_END"));}
+        catch (ExpectedKw &err) {
+            err.set_where("\"end\" to close \"else\" block");
+            throw;
+        }
+    }
+    if (!check("KW_END", true)) {
+        cout << "Nao devaria chegar aqui nem quando ta errado. Tirar isso depois." << endl;
+        throw ExpectedKw("input.lua", peek().line, "\"end\" after \"else\" block");
+    }
+    return new IfStmt(condition_list, block_list);
 }
 
 Stmt* Parser::print() {
@@ -301,15 +371,15 @@ Stmt* Parser::assignment() {
     vector<Expr*> exprs;
     try {vars = var_list();}
     catch(ExpectedVarIdentifier& err) {
-        err.set_where("in global assignment variable list");
+        err.set_where("in assignment variable list");
         throw;
     }
     // In assignments, attributing values is mandatory.
     if (!check("SINGLE_EQUAL", true))
-        throw ExpectedEqualSign("input.lua", peek().line, "in global assignment"); 
+        throw ExpectedEqualSign("input.lua", peek().line, "in assignment"); 
     try {exprs = exp_list();}
     catch(ExpectedExpr& err) {
-        err.set_where("in global assignment expression list");
+        err.set_where("in assignment expression list");
         throw;
     }
     return new Assignment(vars, exprs);
