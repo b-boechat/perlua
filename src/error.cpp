@@ -14,7 +14,7 @@ const char* ParserError::what() const throw() {
     return message.c_str();
 }
 
-void ParserError::set_where(const char* where_) { where = where_; }
+void ParserError::set_where(const char* where_) { if (where == "") where = where_; }
 
 
 InvalidSyntax::InvalidSyntax(const char* filename_, unsigned long line_) :

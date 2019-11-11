@@ -1,5 +1,14 @@
-print (4.449204942094)
-print (47)
-print (4.44400000)
-print (3.12345678901234567890123456)
-print (4443.12345678901234567890123456)
+do
+    local previous, current = 0, 1
+    local it, i = 40, 1
+    while i <= it do
+        if current % 2 == 0 then
+            print (current, "EVEN!")
+        else
+            print (current, "ODD!");
+        end
+        current, previous, i = current + previous, current, i + 1
+    end
+end
+
+    

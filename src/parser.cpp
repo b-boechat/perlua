@@ -16,6 +16,17 @@
         throw; \
     } } while (false);
 
+#define FREE_POINTERS(vec) do { \
+    for (auto IT = (vec).begin(); IT != (vec).end(); ++IT) \
+        delete (*IT); \
+    } while (false);
+
+#define FREE_NESTED_POINTERS(vec) do { \
+    for (auto OIT = vec.begin(); OIT != vec.end(); ++OIT) \
+        FREE_POINTERS(*OIT) \
+    } while (false);
+
+
 using namespace std;
 
 
@@ -135,7 +146,7 @@ Expr* Parser::logic_and() {
 Expr* Parser::comparison() {
     Expr *expr = addition();
     Expr *right = NULL;
-    string token_types[6] = {"GREATER", "GREATER_EQUAL", "LESSER", "LESS_EQUAL", "DOUBLE_EQUAL", "NOT_EQUAL"};
+    string token_types[6] = {"GREATER", "GREATER_EQUAL", "LESSER", "LESSER_EQUAL", "DOUBLE_EQUAL", "NOT_EQUAL"};
     while (check(token_types, 6)) {
         Token op = advance();
         RETHROW_CLEAN(right = addition();)
@@ -239,9 +250,15 @@ std::vector<Stmt*> Parser::block(const char* delimiter, const char* sec_delimite
     // It's important to note that this function does NOT consume the ending token.
     std::vector<Stmt*> statements;
     while (! (check(delimiter) or check(sec_delimiter) or check(third_delimiter))) {
-        if (is_at_end())
+        if (is_at_end()) {
+            FREE_POINTERS(statements);
             throw ExpectedKw("input.lua", peek().line);
-        statements.push_back(statement());
+        }
+        try {statements.push_back(statement());}
+        catch (...) {
+            FREE_POINTERS(statements);
+            throw;
+        }
     }
     return statements;
 }
@@ -261,11 +278,14 @@ Stmt* Parser::while_stmt() {
         err.set_where("as \"while\" condition");
         throw;
     }
-    if (!check("KW_DO", true))
+    if (!check("KW_DO", true)) {
+        delete(condition);
         throw ExpectedKw("input.lua", peek().line, "\"do\" after \"while\" condition");
+    }
     std::vector<Stmt*> statements;
     try {statements = block("KW_END");}
     catch (ExpectedKw &err) {
+        delete(condition);
         err.set_where("\"end\" to close \"while\" block");
         throw;
     }
@@ -287,14 +307,21 @@ Stmt* Parser::if_stmt() {
         // This loop parses an if-elseif structure.
         try {condition_list.push_back(expression());}
         catch (ExpectedExpr &err) {
+            FREE_POINTERS(condition_list)
+            FREE_NESTED_POINTERS(block_list)
             err.set_where((block_list.size()? "as \"elseif\" condition" : "as \"if\" condition"));
             throw;
         }
-        if (!check("KW_THEN", true))
-            throw ExpectedKw("input.lua", peek().line, 
+        if (!check("KW_THEN", true)) {
+            FREE_POINTERS(condition_list)
+            FREE_NESTED_POINTERS(block_list)
+            throw ExpectedKw("input.lua", peek().line,
                     (block_list.size()? "\"then\" after \"elseif\" condition" : "\"then\" after \"if\" condition"));
+        }
         try {block_list.push_back(block("KW_ELSEIF", "KW_ELSE", "KW_END"));}
         catch (ExpectedKw &err) {
+            FREE_POINTERS(condition_list)
+            FREE_NESTED_POINTERS(block_list)
             err.set_where((block_list.size()? "\"end\" to close \"elseif\" block" : "\"end\" to close \"if\" block"));
             throw;
         }
