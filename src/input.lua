@@ -1,14 +1,13 @@
 do
     local previous, current = 0, 1
-    local it, i = 40, 1
+    local i, it = 0, 50
     while i <= it do
+        i = i + 1
         if current % 2 == 0 then
             print (current, "EVEN!")
         else
-            print (current, "ODD!");
+            print (current, "ODD!")
         end
-        current, previous, i = current + previous, current, i + 1
+        previous, current = current, previous + current
     end
 end
-
-    

@@ -28,6 +28,7 @@ class Data {
         Data(size_t num_);
         Data(bool bool_);
         Data(const char* str_);
+        Data(std::string str_);
         // Copy constructor.
         Data(const Data& data);
 

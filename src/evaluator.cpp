@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <memory>
 #include <string>
 #include <math.h> // floor
 #include <sstream> // ostringstream
@@ -13,7 +14,7 @@
 
 using namespace std;
 
-Evaluator::Evaluator(const std::vector<Stmt*>& statements_) : statements(statements_) {
+Evaluator::Evaluator(const vector<shared_ptr<Stmt> > &statements_) : statements(statements_) {
     // Creates global environment.
     env = new Environment();
 }
@@ -37,7 +38,7 @@ void Evaluator::run() {
 
 
 // =====
-Data Evaluator::evaluate(const Expr* expr) const {
+Data Evaluator::evaluate(const shared_ptr<Expr> expr) const {
     return expr->accept(this);
 }
 
@@ -106,6 +107,9 @@ Data Evaluator::visit_binary(const Binary &binary) const {
     }
     if (op_type == "LESSER_EQUAL") {
         return Data(!is_lesser(right, left));
+    }
+    if (op_type == "DOUBLE_DOT") {
+        return Data(STR(left) + STR(right));
     }
     if (op_type == "MINUS") {
         // TODO tipo
@@ -201,7 +205,7 @@ bool Evaluator::is_lesser(const Data& left, const Data& right) const {
 
 // ===== Statement execution
 
-void Evaluator::execute(const Stmt* stmt) {
+void Evaluator::execute(const shared_ptr<Stmt> stmt) {
     return stmt->accept(this);
 }
 
@@ -240,7 +244,7 @@ void Evaluator::visit_if_stmt(const IfStmt& if_stmt) {
 }
 
 
-void Evaluator::execute_block(const vector<Stmt*> &stmts) {
+void Evaluator::execute_block(const vector<shared_ptr<Stmt> > &stmts) {
     Environment* previous = env;
     // First, a new environment is created, with the previous one enclosing it.
     env = new Environment(previous);

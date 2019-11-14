@@ -8,6 +8,7 @@
 
 
 #include <string>
+#include <memory>
 #include "token.h"
 #include "visitor.h"
 #include "data.h"
@@ -30,38 +31,33 @@ class Expr {
 class Binary : virtual public Expr {
     public:
         // A Binary expression takes two Expression operands and a operator.
-        Binary(Expr* left_, Token op_, Expr* right_);
-        // A destructor is necessary to delete the nested Expression nodes.
-        ~Binary();
+        Binary(std::shared_ptr<Expr> left_, Token op_, std::shared_ptr<Expr> right_);
         Data accept(const ExprVisitor* visitor) const override;
-        const Expr *left, *right;
+        const std::shared_ptr<Expr> left, right;
         const Token op;
 };
 
 class Logical : virtual public Expr {
     public:
-        Logical(Expr* left_, Token op_, Expr* right_);
-        ~Logical();
+        Logical(std::shared_ptr<Expr> left_, Token op_, std::shared_ptr<Expr> right_);
         Data accept(const ExprVisitor* visitor) const override;
-        const Expr *left, *right;
+        const std::shared_ptr<Expr> left, right;
         const Token op;
 };
 
 class Unary : virtual public Expr {
     public:
-        Unary(Token op_, Expr* right_);
-        ~Unary();
+        Unary(Token op_, std::shared_ptr<Expr> right_);
         Data accept(const ExprVisitor* visitor) const override;
-        const Expr *right;
+        const std::shared_ptr<Expr> right;
         const Token op;
 };
 
 class Grouping : virtual public Expr {
     public:
-        Grouping(Expr* expr_);
-        ~Grouping();
+        Grouping(std::shared_ptr<Expr> expr_);
         Data accept(const ExprVisitor* visitor) const override;
-        const Expr *expr;
+        const std::shared_ptr<Expr> expr;
 };
 
 

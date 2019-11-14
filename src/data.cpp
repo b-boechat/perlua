@@ -18,6 +18,10 @@ Data::Data(const char* str_) : type(STRING) {
     value.lua_str = new string(str_);
 }
 
+Data::Data(string str_) : type(STRING) {
+    value.lua_str = new string(str_);
+}
+
 Data::Data(bool bool_) : type(BOOLEAN) {
     value.lua_bool = bool_;
 }

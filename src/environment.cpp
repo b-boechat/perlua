@@ -1,5 +1,5 @@
 #include <string>
-#include <iostream> // just for debugging
+#include <memory>
 #include <unordered_map>
 #include "token.h"
 #include "data.h"
@@ -16,21 +16,20 @@ void Environment::assign(const string& var, const Data& val) {
     // First, tries to find var in the innermost scope. This case has to be separated because aux cannot be assigned to "this".
     if (env_map.count(var)) {
         // Reassignment is done by deallocating previous value and allocating again. All of the implemented types are immutable in Lua.
-        delete(env_map[var]);
-        env_map[var] = new Data(val);
+        // unique_ptr does this operation automatically with "reset".
+        env_map[var].reset(new Data(val));
         return;
     }
     // If var wasn't found but innermost scope is the global one, assign here.
     if (!enclosing) {
-        env_map[var] = new Data(val);
+        env_map[var] = make_unique<Data>(val);
     }
     // Otherwise iterates inwards until global scope, looking for var
     Environment* aux = enclosing;
     while (aux) {
         // If var is found in current local scope, reassign. 
         if ((aux->env_map).count(var)) {
-            delete(aux->env_map[var]);
-            aux->env_map[var] = new Data(val);
+            (aux->env_map[var]).reset(new Data(val));
             return;
         }
         aux = aux->enclosing;
@@ -38,18 +37,18 @@ void Environment::assign(const string& var, const Data& val) {
 }
 
 void Environment::declare(const string& var, const Data& val) {
-    // Declaration is always done locally.
-
+    // Declarations are always done locally.
     // Lua allows redeclaration of local variables.
     if (env_map.count(var))
-        delete(env_map[var]);
-    env_map[var] = new Data(val);
+        env_map[var].reset(new Data(val));
+    else 
+        env_map[var] = make_unique<Data>(val);
 }
 
 Data Environment::get(const string& var) const {
     // Tries to find var in the innermost scope. If found, returns it by value using the copy constructor of Data.
     if (env_map.count(var)) {
-        // Method "at" is used instead of operator[] because const qualifier doesn't allow the latter.
+        // Method "at" is used instead of operator[] because of const qualifier.
         return Data(*(env_map.at(var)));
     }
     Environment* aux = enclosing;

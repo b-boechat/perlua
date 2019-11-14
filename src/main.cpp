@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <memory>
 #include <stdio.h> // strncpy
 #include <iostream>
 #include <EXTERN.h>
@@ -38,6 +39,12 @@ void delete_embedding(char** embedding) {
 
 
 int main (int argc, char** argv, char** env) {
+    string filename;
+    if (argc < 2)
+        filename = "input.lua";
+    else
+        filename = argv[1];
+    string lua_code = "use lualexer; $a = return lualexer::tokenize_input(\"" +filename+ "\");";
     char **embedding = set_embedding();
     PERL_SYS_INIT3(&argc, &argv, &env);
     my_perl = perl_alloc();
@@ -45,17 +52,15 @@ int main (int argc, char** argv, char** env) {
     perl_parse(my_perl, NULL, 3, embedding, NULL);
     PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
     perl_run(my_perl);
-    SV *val = eval_pv("use lualexer; $a = return lualexer::tokenize_input(\"input.lua\");", TRUE);
+    SV *val = eval_pv(lua_code.c_str(), TRUE);
     string codified_tokens(SvPV_nolen(val));
     perl_destruct(my_perl);
     perl_free(my_perl);
     PERL_SYS_TERM();
     delete_embedding(embedding);
-
-
-    Parser parser(codified_tokens.c_str());
+    Parser parser(codified_tokens.c_str(), filename);
     //parser.print_tokens();
-    std::vector <Stmt*> statements;
+    vector<shared_ptr<Stmt> > statements;
     try {
         statements = parser.parse();
     }

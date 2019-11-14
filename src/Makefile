@@ -1,8 +1,8 @@
 CC=g++
-CCFLAGS=-Wall -std=c++11 -g
+CCFLAGS=-Wall -std=c++14 -g
 EMBEDCCFLAGS= $(shell perl -MExtUtils::Embed -e ccopts)
 LD=g++
-LDFLAGS=-Wall -std=c++11 -g \
+LDFLAGS=-Wall -std=c++14 -g \
 			$(shell perl -MExtUtils::Embed -e ldopts)
 
 

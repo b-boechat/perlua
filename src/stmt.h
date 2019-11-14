@@ -2,6 +2,7 @@
 #define STMT_H_INCLUDED 1
 
 #include <vector>
+#include <memory>
 #include "visitor.h"
 #include "token.h"
 #include "expr.h"
@@ -16,10 +17,9 @@ class Stmt {
 
 class ExplicitBlock : public Stmt {
     public:
-        ExplicitBlock(const std::vector<Stmt*> &stmts_);
-        ~ExplicitBlock();
+        ExplicitBlock(const std::vector<std::shared_ptr<Stmt> > &stmts_);
         void accept(StmtVisitor* visitor) const override;
-        const std::vector <Stmt*> stmts;
+        const std::vector <std::shared_ptr<Stmt> > stmts;
 };
 
 class Empty : public Stmt {
@@ -30,47 +30,42 @@ class Empty : public Stmt {
 
 class WhileStmt : public Stmt {
     public:
-        WhileStmt(Expr* condition_, const std::vector<Stmt*> &stmts_);
-        ~WhileStmt();
+        WhileStmt(std::shared_ptr<Expr> condition_, const std::vector<std::shared_ptr<Stmt> > &stmts_);
         void accept(StmtVisitor* visitor) const override;
-        const Expr* condition;
-        const std::vector<Stmt*> stmts;
+        const std::shared_ptr<Expr> condition;
+        const std::vector<std::shared_ptr<Stmt> > stmts;
 };
 
 class IfStmt : public Stmt {
     public:
-        IfStmt(const std::vector<Expr*> &conditions_, const std::vector<std::vector<Stmt*> > &block_list_); 
-        ~IfStmt();
+        IfStmt(const std::vector<std::shared_ptr<Expr> > &conditions_, const std::vector<std::vector<std::shared_ptr<Stmt> > > &block_list_); 
         void accept(StmtVisitor* visitor) const override;
-        const std::vector<Expr*> conditions;
-        const std::vector<std::vector<Stmt*> > block_list;
+        const std::vector<std::shared_ptr<Expr> > conditions;
+        const std::vector<std::vector<std::shared_ptr<Stmt> > > block_list;
 };
 
 class Print : public Stmt {
     public:
-        Print(Token keyword_, const std::vector<Expr*> &args_);
-        ~Print();
+        Print(Token keyword_, const std::vector<std::shared_ptr<Expr> > &args_);
         void accept(StmtVisitor* visitor) const override;
         const Token keyword;
-        const std::vector<Expr*> args;
+        const std::vector<std::shared_ptr<Expr> > args;
 };
 
 class Assignment : public Stmt {
     public:
-        Assignment(const std::vector<std::string> &var_list_, const std::vector<Expr*> &expr_list_);
-        ~Assignment();
+        Assignment(const std::vector<std::string> &var_list_, const std::vector<std::shared_ptr<Expr> > &expr_list_);
         void accept(StmtVisitor* visitor) const override;
         const std::vector<std::string> var_list;
-        const std::vector<Expr*> expr_list;
+        const std::vector<std::shared_ptr<Expr> > expr_list;
 };
 
 class Declaration : public Stmt {
     public:
-        Declaration(const std::vector<std::string> &var_list_, const std::vector<Expr*> &expr_list_);
+        Declaration(const std::vector<std::string> &var_list_, const std::vector<std::shared_ptr<Expr> > &expr_list_);
         Declaration(const std::vector<std::string> &var_list_);
-        ~Declaration();
         void accept(StmtVisitor* visitor) const override;
         const std::vector<std::string> var_list;
-        const std::vector<Expr*> expr_list;
+        const std::vector<std::shared_ptr<Expr> > expr_list;
 };
 #endif

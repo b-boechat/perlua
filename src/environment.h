@@ -5,6 +5,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <memory>
 #include "token.h"
 #include "data.h"
 
@@ -21,7 +22,7 @@ class Environment {
         Data get(const std::string& var) const; 
 
     private:
-        std::unordered_map<std::string, Data*> env_map;
+        std::unordered_map<std::string, std::unique_ptr<Data> > env_map;
         Environment* enclosing;
 };
 
