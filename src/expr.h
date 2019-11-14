@@ -13,19 +13,11 @@
 #include "visitor.h"
 #include "data.h"
 
-// Tirar isso depois, é só pra debugging. TODO
-enum ExprType {BINARY, LOGICAL, UNARY, GROUPING, LITERAL, VARIABLE};
-
-
 class Expr {
     // Defines the base Expr class, from which all expression types inherit.
     public:
-        Expr(ExprType type_);
-        ExprType get_type() const;
         virtual ~Expr(); 
         virtual Data accept(const ExprVisitor* visitor) const = 0;
-        // Saves expression type, useful to the evaluator.
-        ExprType type;
 };
 
 class Binary : virtual public Expr {
@@ -73,7 +65,6 @@ class Literal : virtual public Expr {
 
 class Variable : virtual public Expr {
     public: 
-        // TODO talvez não precise de token, e sim de string mesmo.
         Variable(Token id_);
         Data accept(const ExprVisitor* visitor) const override;
         const Token id; 

@@ -6,6 +6,7 @@
 #include <sstream> // ostringstream
 #include <iomanip> // setprecision
 #include "token.h"
+#include "error.h"
 #include "environment.h"
 #include "expr.h"
 #include "stmt.h"
@@ -14,7 +15,18 @@
 
 using namespace std;
 
-Evaluator::Evaluator(const vector<shared_ptr<Stmt> > &statements_) : statements(statements_) {
+#define RETHROW_WITH_LINE(expr, code) do { \
+    try {code ;} \
+    catch (RuntimeError &err) { \
+    err.set_line(expr.op.line); \
+    throw; \
+    } } while (false);
+
+#define NUM(data) (convert_to_number(data).get_value().lua_num)
+#define STR(data) (*(convert_to_string(data).get_value().lua_str))
+#define BOOL(data) (data.get_value().lua_bool)
+
+    Evaluator::Evaluator(string filename_, const vector<shared_ptr<Stmt> > &statements_) : filename(filename_), statements(statements_) {
     // Creates global environment.
     env = new Environment();
 }
@@ -54,22 +66,15 @@ Data Evaluator::visit_unary(const Unary &unary) const {
     Data right = evaluate(unary.right); 
     string op_type = unary.op.type;
     if (op_type == "MINUS") {
-        // TODO Fazer as checagens de tipo corretamente
-        if (right.get_type() != NUMBER) cout << "Tipo errado!!! 093kfspd" << endl;
-        //
-        return Data(-NUM(right));
+        RETHROW_WITH_LINE(unary, return Data(-NUM(right)))
     }
     if (op_type == "HASH") {
-        // TODO Fazer as checagens de tipo corretamente
-        if (right.get_type() != STRING) cout << "Tipo errado!!! 09dqdofd" << endl;
-        //
-        return Data(STR(right).size());
+        RETHROW_WITH_LINE(unary, return Data(STR(right).size()))
     }
     if (op_type == "KW_NOT") {
         return Data(!is_truthy(right));
     }
-    cout << "Should not be here!! ad2109ddk" << endl;
-    return Data();
+    return Data(); // Just to avoid warning, control never gets here.
 }
 
 Data Evaluator::visit_logical(const Logical &logical) const {
@@ -81,67 +86,61 @@ Data Evaluator::visit_logical(const Logical &logical) const {
     if (op_type == "KW_AND") {
         return (is_truthy(left)? evaluate(logical.right) : Data(left));
     }
-    cout << "should never be here! 0d30d" << endl;
-    return Data();
+    // To avoid warning
+    return Data(); 
 }
 
 Data Evaluator::visit_binary(const Binary &binary) const {
     Data left = evaluate(binary.left);
     Data right = evaluate(binary.right);
     string op_type = binary.op.type;
-    if (op_type == "DOUBLE_EQUAL") {
+    if (op_type == "DOUBLE_EQUAL")
         return Data(is_equal(left, right));
-    }
-    if (op_type == "NOT_EQUAL") {
+    if (op_type == "NOT_EQUAL")
         return Data(!is_equal(left, right));
-    }
+
     if (op_type == "LESSER") {
-        return Data(is_lesser(left, right));
+        RETHROW_WITH_LINE(binary, return Data(is_lesser(left, right)))
     }
     if (op_type == "GREATER") {
-        // TODO tipo em todos os relacionais
-        return Data(is_lesser(right, left));
+        RETHROW_WITH_LINE(binary, return Data(is_lesser(right, left)))
     }
     if (op_type == "GREATER_EQUAL") {
-        return Data(!is_lesser(left, right));
+        RETHROW_WITH_LINE(binary, return Data(!is_lesser(left, right)))
     }
     if (op_type == "LESSER_EQUAL") {
-        return Data(!is_lesser(right, left));
+        RETHROW_WITH_LINE(binary, return Data(!is_lesser(right, left)))
     }
     if (op_type == "DOUBLE_DOT") {
-        return Data(STR(left) + STR(right));
+        RETHROW_WITH_LINE(binary, return Data(STR(left) + STR(right)))
     }
     if (op_type == "MINUS") {
-        // TODO tipo
-        return Data(NUM(left) - NUM(right));
+        RETHROW_WITH_LINE(binary, return Data(NUM(left) - NUM(right)))
     }
     if (op_type == "PLUS") {
-        // TODO tipo
-        return Data(NUM(left) + NUM(right));
+        RETHROW_WITH_LINE(binary, return Data(NUM(left) + NUM(right)))
     }
     if (op_type == "SLASH") {
         // TODO tipo. TODO tratar divisão por 0.
-        return Data(NUM(left) / NUM(right));
-
+        RETHROW_WITH_LINE(binary, return Data(NUM(left) / NUM(right)))
     }
     if (op_type == "STAR") {
-        // TODO tipo
-        return Data(NUM(left) * NUM(right));
+        RETHROW_WITH_LINE(binary, return Data(NUM(left) * NUM(right)))
 
     }
     if (op_type == "DOUBLE_SLASH") {
         // TODO tipo. TODO tratar divisão por zero.
-        return Data(floor(NUM(left)/NUM(right)));
+        RETHROW_WITH_LINE(binary, return Data(floor(NUM(left)/NUM(right))))
     }
     if (op_type == "PERCENT") {
         // TODO tipo. TODO tratar divisão por zero.
-        return Data(NUM(left) - floor(NUM(left)/NUM(right)) * NUM(right));
+        RETHROW_WITH_LINE(binary, return Data(NUM(left) - floor(NUM(left)/NUM(right)) * NUM(right)))
     }
     if (op_type == "CIRCUMFLEX") {
         // TODO tipo. TODO tratar 0^0.
-        return Data(pow(NUM(left), NUM(right)));
+        RETHROW_WITH_LINE(binary, return Data(pow(NUM(left), NUM(right))))
     }
-    cout << "Should not be here!! ldldd0220kdddk" << endl;
+    // To avoid warning
     return Data();
 }
 
@@ -150,6 +149,44 @@ Data Evaluator::visit_variable(const Variable &variable) const {
 }
 
 // ===== Expression evaluator helper functions
+
+Data Evaluator::convert_to_number(const Data& data) const {
+    LuaType type = data.get_type();
+    switch (type) {
+        case NUMBER:
+            return data;
+        case STRING:
+            try {return Data(stod(STR(data)));}
+            catch (invalid_argument) { // stod can throw "invalid_argument" and "out_of_range".
+                throw InvalidConversion(filename, "number");
+            }
+            catch (out_of_range) {
+                throw OutOfRangeConversion(filename);
+            }
+        case BOOLEAN:
+            throw InvalidTypeForOp(filename, "boolean");
+        default: // case NIL
+            throw InvalidTypeForOp(filename, "nil");
+    }
+}
+
+Data Evaluator::convert_to_string(const Data& data) const {
+    LuaType type = data.get_type();
+    switch (type) {
+        case NUMBER:
+            {
+                ostringstream out;
+                out << setprecision(13) << data.get_value().lua_num;
+                return Data(out.str());
+            }
+        case STRING:
+            return data;
+        case BOOLEAN:
+            throw InvalidTypeForOp(filename, "boolean"); 
+        default: // case NIL
+            throw InvalidTypeForOp(filename, "nil"); 
+    }
+}
 
 bool Evaluator::is_truthy(const Data& data) const {
     // In Lua, everything is truthy except for false and nil. This includes number 0 and empty strings.
@@ -163,8 +200,6 @@ bool Evaluator::is_truthy(const Data& data) const {
         default: // case NIL
             return false;
     }     
-    cout << "Should not be here! alad02dk" << endl;
-    return false;
 }
 
 bool Evaluator::is_equal(const Data& left, const Data& right) const {
@@ -181,26 +216,22 @@ bool Evaluator::is_equal(const Data& left, const Data& right) const {
         default: // case NIL
             return true;
     }
-    cout << "Should nooout be hear! lsad0dd" << endl;
-    return false;
 }
 
 bool Evaluator::is_lesser(const Data& left, const Data& right) const {
-    // TODO Checagem de tipo aqui ou lá
     LuaType type = left.get_type();
+    if (right.get_type() != type)
+        throw ComparationDifferentTypes(filename);
     switch (type) {
         case NUMBER:
             return (NUM(left) < NUM(right));
         case STRING:
             return (STR(left).compare(STR(right)) < 0);
         case NIL:
-           // TODO erro aqui 
+           throw InvalidTypeForOp(filename, "nil");
         default: // CASE BOOLEAN
-            // TODO erro aqui
-            return false;
+           throw InvalidTypeForOp(filename, "boolean");
     }
-    cout << "Should noot be heri dsal02" << endl;
-    return false;
 }
 
 // ===== Statement execution
@@ -249,9 +280,15 @@ void Evaluator::execute_block(const vector<shared_ptr<Stmt> > &stmts) {
     // First, a new environment is created, with the previous one enclosing it.
     env = new Environment(previous);
     // Then, all statements are executed within this new environment.
-    // TODO this will have to be a try block so the new env is deleted.
-    for (auto it = stmts.begin(); it != stmts.end(); ++it) {
-        execute(*it);
+    try {
+        for (auto it = stmts.begin(); it != stmts.end(); ++it) {
+            execute(*it);
+        }
+    }
+    catch (...) {
+        delete (env);
+        env = previous;
+        throw;
     }
     // After execution, the block environment is deleted and the previous one is restored.
     // If a "repeat until" statement is added in the future, deletion can't be done here (because the environment only ends after condition evaluation);
@@ -267,7 +304,7 @@ void Evaluator::visit_empty(const Empty& empty) const {
 void Evaluator::visit_print(const Print& print) const {
     for (auto it = print.args.begin(); it != print.args.end(); ++it) {
         Data data = evaluate(*it);
-        string str_arg = stringify(data);
+        string str_arg = stringify_for_print(data);
         // By default, Lua "print" separates arguments with a '\t' character and prints a newline after the last one.
         cout << str_arg << '\t';
     }
@@ -310,7 +347,7 @@ void Evaluator::visit_assignment(const Assignment& assig) const {
 
 
 // Statement helper functions.
-string Evaluator::stringify(const Data& data) const {
+string Evaluator::stringify_for_print(const Data& data) const {
     LuaType type = data.get_type();
     switch (type) {
         case STRING:
@@ -321,7 +358,7 @@ string Evaluator::stringify(const Data& data) const {
             return (BOOL(data)? "true" : "false");
         default: // case NUMBER
             ostringstream out;
-            out << setprecision(13) << NUM(data);
+            out << setprecision(13) << data.get_value().lua_num;
             return out.str();
     }
 }

@@ -1,11 +1,6 @@
 #ifndef DATA_H_INCLUDED
 #define DATA_H_INCLUDED 1
 
-// These macros are useful for retreiving values with less verbosity.
-#define STR(data) (*(data.get_value().lua_str))
-#define NUM(data) (data.get_value().lua_num)
-#define BOOL(data) (data.get_value().lua_bool)
-
 #include <string>
 
 

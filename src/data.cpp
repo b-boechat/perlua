@@ -29,13 +29,13 @@ Data::Data(bool bool_) : type(BOOLEAN) {
 Data::Data(const Data& data) : type(data.get_type()) {
     switch (type) {
         case (STRING):
-            value.lua_str = new string(STR(data));
+            value.lua_str = new string(*(data.get_value().lua_str));
         break;
         case (NUMBER):
-            value.lua_num = NUM(data);
+            value.lua_num = data.get_value().lua_num;
         break;
         case (BOOLEAN):
-            value.lua_bool = BOOL(data);
+            value.lua_bool = data.get_value().lua_bool;
         break;
         default: ; // No value assignment is done for nil.
     }

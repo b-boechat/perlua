@@ -51,7 +51,7 @@ class StmtVisitor {
     public:
         virtual ~StmtVisitor() {}
     private:
-        // "visit_explicit_block" is not const because it (temporarily) alters the environment.
+        // visit_explicit_block, visit_while_stmt and visit_if_stmt are not const because it (temporarily) alters the environment.
         virtual void visit_explicit_block(const ExplicitBlock& block) = 0;
         virtual void visit_empty(const Empty& empty) const = 0;
         virtual void visit_while_stmt(const WhileStmt& while_stmt) = 0;

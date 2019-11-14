@@ -7,13 +7,18 @@
 #include "visitor.h"
 #include "environment.h"
 
+
 class Evaluator : public ExprVisitor, public StmtVisitor {
     friend class Expr; // Allows Expr to acess visit_xxx methods.
     public:
-        Evaluator(const std::vector<std::shared_ptr<Stmt> > &statements_);
+        Evaluator(std::string filename, const std::vector<std::shared_ptr<Stmt> > &statements_);
         ~Evaluator();
         void run();
     private:
+        std::string filename;
+        const std::vector<std::shared_ptr<Stmt> > statements;
+        Environment* env;
+
         // This method routes expression evaluation to the correct evaluation method, depending on the expression type.
         Data evaluate(const std::shared_ptr<Expr> expr) const;
 
@@ -24,7 +29,9 @@ class Evaluator : public ExprVisitor, public StmtVisitor {
         Data visit_literal(const Literal& literal) const override;
         Data visit_variable(const Variable& variable) const override;
 
-        // Expression evaluation helper functions are is_truthy, is_equal and is_lesser.
+        // Expression evaluation helper functions are convert_to_number, convert_to_string, is_truthy, is_equal and is_lesser.
+        Data convert_to_number (const Data& data) const;
+        Data convert_to_string (const Data& data) const;
         bool is_truthy(const Data& data) const;
         bool is_equal(const Data& left, const Data& right) const;
         bool is_lesser(const Data& left, const Data& right) const;
@@ -42,11 +49,8 @@ class Evaluator : public ExprVisitor, public StmtVisitor {
 
         // Statement execution helper functions are execute_block and stringify.
         void execute_block(const std::vector<std::shared_ptr<Stmt> > &stmts);
-        std::string stringify(const Data& data) const;
+        std::string stringify_for_print(const Data& data) const;
         
-        // TODO doc 
-        const std::vector<std::shared_ptr<Stmt> > statements;
-        Environment* env;
 };
 
 

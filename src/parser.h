@@ -14,7 +14,7 @@ class Parser {
     public:
         /* This constructor uses "tokens_stream", received from the Perl scanner, to build the vector of Tokens.
         It also sets pos to 0, which means we start parsing at the beginning of the vector. */
-        Parser(const char* tokens_stream, std::string filename_);
+        Parser(std::string filename_, const char* tokens_stream);
 
         std::vector <std::shared_ptr<Stmt> > parse();
         void print_tokens() const;

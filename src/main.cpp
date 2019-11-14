@@ -13,6 +13,11 @@
 #include "expr.h"
 #include "evaluator.h"
 
+#define LEXER_ERROR 1
+#define PARSER_ERROR 2
+#define RUNTIME_ERROR 3
+
+
 using namespace std;
 
 PerlInterpreter *my_perl;
@@ -36,6 +41,15 @@ void delete_embedding(char** embedding) {
     delete[] embedding;
 }
 
+bool check_lexer_error(string codified_tokens) {
+    string check = "";
+    for (size_t i = 0; codified_tokens[i] != '\0'; ++i) {
+        check += codified_tokens[i];
+    }
+    if (check == "ERROR")
+        return true;
+    return false;
+}
 
 
 int main (int argc, char** argv, char** env) {
@@ -58,18 +72,27 @@ int main (int argc, char** argv, char** env) {
     perl_free(my_perl);
     PERL_SYS_TERM();
     delete_embedding(embedding);
-    Parser parser(codified_tokens.c_str(), filename);
-    //parser.print_tokens();
+    if (check_lexer_error(codified_tokens)) {
+        exit(LEXER_ERROR);
+    }
+    Parser parser(filename, codified_tokens.c_str());
+//    parser.print_tokens();
     vector<shared_ptr<Stmt> > statements;
     try {
         statements = parser.parse();
     }
     catch (ParserError &err) {
         cout << err.what() << endl;
-        exit (1);
+        exit(PARSER_ERROR);
     }
-    Evaluator evaluator(statements);
-    evaluator.run();
+    Evaluator evaluator(filename, statements);
+    try {
+        evaluator.run();
+    }
+    catch (RuntimeError &err) {
+        cout << err.what() << endl;
+        exit(RUNTIME_ERROR);
+    }
     return 0;
 }
 

@@ -44,3 +44,6 @@ interpreter: $(PROGRAMOBJS)
 
 clean:
 	rm -f *.o interpreter
+
+cleanobjs:
+	rm -f *.o

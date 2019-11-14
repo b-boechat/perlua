@@ -2,6 +2,8 @@
 #define ERROR_H_INCLUDED 1
 #include <exception>
 #include <string>
+/* This header defines the exceptions thrown by the interpreter */
+
 
 class ParserError : public std::exception {
     public:
@@ -47,5 +49,43 @@ class ExpectedEqualSign : virtual public ParserError {
         ExpectedEqualSign(std::string filename_, unsigned long line_, const char* where_="");
 };
 
+class RuntimeError : public std::exception {
+    public:
+        RuntimeError(std::string filename_);
+        std::string get_filename() const;
+        std::string get_line() const;
+        void set_line(unsigned long line_);
+    private:
+        std::string filename, line;
+};
+
+class InvalidConversion : public RuntimeError {
+    public:
+        InvalidConversion(std::string filename_, const char* type);
+        virtual const char* what() const throw() override;
+    private:
+        std::string type;
+};
+
+class OutOfRangeConversion : public RuntimeError {
+    public:
+        OutOfRangeConversion(std::string filename_);
+        virtual const char* what() const throw() override;
+        // Type is always "number".
+};
+
+class InvalidTypeForOp : public RuntimeError {
+    public:
+        InvalidTypeForOp(std::string filename_, const char* type_);
+        virtual const char* what() const throw() override;
+    private:
+        std::string type; 
+};
+
+class ComparationDifferentTypes : public RuntimeError {
+    public:
+        ComparationDifferentTypes(std::string filename_);
+        virtual const char* what() const throw() override;
+};
 
 #endif

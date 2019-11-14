@@ -21,9 +21,7 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 ) ] );
 
 our @EXPORT_OK = qw (
-    return_two
     read_file
-    parser_error
     build_token
     stringify_token
     append_token
@@ -45,27 +43,28 @@ our @EXPORT = qw(
 # Lexer functions below ==========
 
 sub read_file {
-    # read_file ($FILENAME)
+    # read_file ($FILENAME, \$ERR)
     # FILENAME is passed as a string. This function returns the text content of the file.
-    my $filename = shift @_;
+    (my $filename, my $err) = @_;
     my $char_limit = 100000000; #Maximum file length supported.
     my $text;
-    open (my $file, "<", $filename)
-        or die "Fatal Error: Can't open $filename for reading: $!\n";
-    if (!read ($file, $text, $char_limit) and $!) {
-        die "Fatal Error: Error reading file: $!\n";
+    my $file;
+    if (!open($file, "<", $filename)) {
+        print("Fatal Error: Can't open $filename for reading: $!\n");
+        ${$err} = 1;
+        return "";
     }
-    close ($file)
-        or die "Fatal Error: can't close $filename for reading: $!\n";
+    if (!read ($file, $text, $char_limit) and $!) {
+        print("Fatal Error: Error reading file: $!\n");
+        ${$err} = 1;
+        return "";
+    }
+    if (!close ($file)) {
+        print("Fatal Error: can't close $filename for reading: $!\n");
+        ${$err} = 1;
+        return "";
+    }
     return $text;
-}
-
-sub parser_error {
-    # parser_error ($FILENAME, $LINE, $ERROR_MESSAGE)
-    # Prints error message and stops source parsing.
-    (my $filename, my $line, my $error_message) = @_;
-    print ("{File '$filename', line $line} Parser Error: $error_message\n");
-    return "1";
 }
 
 sub build_token {
@@ -326,13 +325,15 @@ sub tokenize_input {
     # tokenize_input ($FILENAME)
     # Lexer's main function. Currently prints all tokens from input file $FILENAME. When the parser and evaluator are implemented, this function will instead return the tokens, in a codified form, to the C++ program.
     my %token;
+    my $err = 0;
     my $codified_tokens = "";
     my $filename = shift;
     if (!$filename) {
         print("Fatal Error: No input files.\n");
-        return "2";
+        return "ERROR\0";
     }
     my $text = read_file($filename);
+    return "ERROR\0" if ($err == 1);
     #Storing line position is useful for better error messages.
     my $line = 1;
     #Appends a whitespace to the end of source code, as this allows some cleaner regex.
@@ -342,7 +343,10 @@ sub tokenize_input {
     while (length($text)) {
         %token = get_next_token(\$text, $line);
         #If an error is encountered, lexing stops.
-        return parser_error($filename, $token{"line"}, $token{"value"}) if $token{"type"} eq "ERROR";
+        if ($token{"type"} eq "ERROR") {
+            print ($filename, ":", $token{"line"}, ": Lexer Error: ", $token{"value"}, "\n");
+            return "ERROR\0";
+        }
         #print (stringify_token(%token), "\n");
         $codified_tokens = append_token($codified_tokens, \%token);
         skip_meaningless(\$text, \$line);

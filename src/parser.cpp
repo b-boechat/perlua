@@ -13,7 +13,7 @@ using namespace std;
 
 
 // Public functions:
-Parser::Parser(const char* tokens_stream, string filename_) : filename(filename_) {
+Parser::Parser(string filename_, const char* tokens_stream) : filename(filename_) {
     pos = 0;
     Token new_token;
     unsigned long i;
