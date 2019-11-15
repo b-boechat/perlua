@@ -121,7 +121,7 @@ Data Evaluator::visit_binary(const Binary &binary) const {
         RETHROW_WITH_LINE(binary, return Data(NUM(left) + NUM(right)))
     }
     if (op_type == "SLASH") {
-        // TODO tipo. TODO tratar divisão por 0.
+        // Division by zero is not explicitly treated, following Lua implementation.
         RETHROW_WITH_LINE(binary, return Data(NUM(left) / NUM(right)))
     }
     if (op_type == "STAR") {
@@ -129,15 +129,12 @@ Data Evaluator::visit_binary(const Binary &binary) const {
 
     }
     if (op_type == "DOUBLE_SLASH") {
-        // TODO tipo. TODO tratar divisão por zero.
         RETHROW_WITH_LINE(binary, return Data(floor(NUM(left)/NUM(right))))
     }
     if (op_type == "PERCENT") {
-        // TODO tipo. TODO tratar divisão por zero.
         RETHROW_WITH_LINE(binary, return Data(NUM(left) - floor(NUM(left)/NUM(right)) * NUM(right)))
     }
     if (op_type == "CIRCUMFLEX") {
-        // TODO tipo. TODO tratar 0^0.
         RETHROW_WITH_LINE(binary, return Data(pow(NUM(left), NUM(right))))
     }
     // To avoid warning

@@ -58,7 +58,7 @@ const char* OutOfRangeConversion::what() const throw() {
 
 InvalidTypeForOp::InvalidTypeForOp(string filename_, const char* type_) : RuntimeError(filename_), type(type_) {}
 const char* InvalidTypeForOp::what() const throw() {
-    static string message = get_filename()+":"+get_line()+": "+"Runtime Error: "+"Attempt to perform incompatible operation on operand of of type \""+type+"\".";
+    static string message = get_filename()+":"+get_line()+": "+"Runtime Error: "+"Attempt to perform incompatible operation on operand of type \""+type+"\".";
     return message.c_str();
 }
 
@@ -68,5 +68,4 @@ const char* ComparationDifferentTypes::what() const throw() {
     static string message = get_filename()+":"+get_line()+": "+"Runtime Error: "+"Attempt to compare different types.";
     return message.c_str();
 }
-
 

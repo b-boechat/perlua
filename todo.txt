@@ -1,2 +1,0 @@
-TODO Adicionar concatenacao de strings com ..
-TODO Numeros sao convertidos pra string em tempo de execuçao e vice-versa se for necessário pra uma operação. O mesmo não vale pra boolean e nil.

@@ -26,7 +26,7 @@ char** set_embedding() {
     char** embedding = new char*[4];
     for (int i = 0; i < 3; ++i) {
         // A memoria só aloca até i = 2 porque o embedding[3] é NULL.
-        embedding[i] = new char[2];
+        embedding[i] = new char[3];
     }
     strncpy(embedding[0], "", 1);
     strncpy(embedding[1], "-e", 3);
