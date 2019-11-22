@@ -1,5 +1,6 @@
 #include <string>
 #include <memory>
+#include <iostream> // debug
 #include <unordered_map>
 #include "token.h"
 #include "data.h"
@@ -27,9 +28,14 @@ void Environment::assign(const string& var, const Data& val) {
     // Otherwise iterates inwards until global scope, looking for var
     Environment* aux = enclosing;
     while (aux) {
-        // If var is found in current local scope, reassign. 
+        // If var is found in current local scope, assign.
         if ((aux->env_map).count(var)) {
             (aux->env_map[var]).reset(new Data(val));
+            return;
+        }
+        // If iterated to global scope, assign.
+        if (!aux->enclosing) {
+            aux->env_map[var] = make_unique<Data>(val);
             return;
         }
         aux = aux->enclosing;

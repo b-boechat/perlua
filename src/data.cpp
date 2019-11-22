@@ -52,7 +52,7 @@ Value Data::get_value() const {
 
 Data::~Data() {
     if (type == STRING and value.lua_str) {
-        delete value.lua_str;
+        delete (value.lua_str);
         value.lua_str = NULL;
     }
 }

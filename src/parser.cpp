@@ -100,7 +100,7 @@ shared_ptr<Expr> Parser::logic_or() {
     while (check("KW_OR")) {
         Token op = advance();
         right = logic_and();
-        expr = shared_ptr<Expr>(new Logical(expr, op, right));
+        expr = make_shared<Logical>(expr, op, right);
     }
     return expr;
 }
@@ -111,7 +111,7 @@ shared_ptr<Expr> Parser::logic_and() {
     while (check("KW_AND")) {
         Token op = advance();
         right = comparison();
-        expr = shared_ptr<Expr>(new Logical(expr, op, right));
+        expr = make_shared<Logical>(expr, op, right);
     }
     return expr;
 }
@@ -123,7 +123,7 @@ shared_ptr<Expr> Parser::comparison() {
     while (check(token_types, 6)) {
         Token op = advance();
         right = concatenation();
-        expr = shared_ptr<Expr>(new Binary(expr, op, right));
+        expr = make_shared<Binary>(expr, op, right);
     }
     return expr;
 }
@@ -135,7 +135,7 @@ shared_ptr<Expr> Parser::concatenation() {
     if (check("DOUBLE_DOT")) {
         Token op = advance();
         right = concatenation();
-        expr = shared_ptr<Expr>(new Binary(expr, op, right));
+        expr = make_shared<Binary>(expr, op, right);
     }
     return expr;
 }
@@ -147,7 +147,7 @@ shared_ptr<Expr> Parser::addition() {
     while (check(token_types, 2)) {
         Token op = advance();
         right = multiplication();
-        expr = shared_ptr<Expr>(new Binary(expr, op, right));
+        expr = make_shared<Binary>(expr, op, right);
     }
     return expr;
 }
@@ -158,7 +158,7 @@ shared_ptr<Expr> Parser::multiplication() {
     while (check(token_types, 4)) {
         Token op = advance();
         right = unary();
-        expr = shared_ptr<Expr>(new Binary(expr, op, right));
+        expr = make_shared<Binary>(expr, op, right);
     }
     return expr;
 }
@@ -167,7 +167,7 @@ shared_ptr<Expr> Parser::unary() {
     if (check(token_types, 3)) {
         Token op = advance();
         shared_ptr<Expr> right = unary();
-        return shared_ptr<Expr>(new Unary(op, right));
+        return make_shared<Unary>(op, right);
     }
     return exponentiation();
 }
@@ -179,30 +179,30 @@ shared_ptr<Expr> Parser::exponentiation() {
     if (check("CIRCUMFLEX")) {
         Token op = advance();
         right = exponentiation();
-        expr = shared_ptr<Expr>(new Binary(expr, op, right));
+        expr = make_shared<Binary>(expr, op, right);
     }
     return expr;
 }
 
 shared_ptr<Expr> Parser::primary() {
     if (check("KW_FALSE", true)) 
-        return shared_ptr<Expr>(new Literal(false));
+        return make_shared<Literal>(false);
     if (check("KW_TRUE", true)) 
-        return shared_ptr<Expr>(new Literal(true));
+        return make_shared<Literal>(true);
     if (check("KW_NIL", true)) 
-        return shared_ptr<Expr>(new Literal());
+        return make_shared<Literal>();
     if (check("STRING"))
-        return shared_ptr<Expr>(new Literal(advance().value));
+        return make_shared<Literal>(advance().value);
     if (check("NUMBER"))
-        return shared_ptr<Expr>(new Literal(stod(advance().value)));
+        return make_shared<Literal>(stod(advance().value));
     if (check("IDENTIFIER"))
-        return shared_ptr<Expr>(new Variable(advance()));
+        return make_shared<Variable>(advance());
     if (check("PAR_OPEN")) {
         advance();
         shared_ptr<Expr> expr = expression();
         if (!check("PAR_CLOSE", true))
             throw ExpectedParClose(filename, peek().line, "in expression");
-        return shared_ptr<Expr>(new Grouping(expr));
+        return make_shared<Grouping>(expr);
     }
     throw ExpectedExpr(filename, peek().line);
 }
@@ -223,7 +223,7 @@ shared_ptr<Stmt> Parser::explicit_block() {
         throw;
     }
     advance(); // Consumes the KW_END token
-    return shared_ptr<Stmt>(new ExplicitBlock(statements));
+    return make_shared<ExplicitBlock>(statements);
 }
 
 vector<shared_ptr<Stmt> > Parser::block(const char* delimiter, const char* sec_delimiter/*=""*/, const char* third_delimiter/*=""*/) {
@@ -241,7 +241,7 @@ vector<shared_ptr<Stmt> > Parser::block(const char* delimiter, const char* sec_d
 
 shared_ptr<Stmt> Parser::empty() {
     if (check("SEMICOLON", true))
-        return shared_ptr<Stmt>(new Empty());
+        return make_shared<Empty>();
     return while_stmt();
 }
 
@@ -263,7 +263,7 @@ shared_ptr<Stmt> Parser::while_stmt() {
         throw;
     }
     advance();
-    return shared_ptr<Stmt>(new WhileStmt(condition, statements));
+    return make_shared<WhileStmt>(condition, statements);
 }
 
 shared_ptr<Stmt> Parser::if_stmt() {
@@ -303,7 +303,7 @@ shared_ptr<Stmt> Parser::if_stmt() {
     }
     // Consumes "end" token.
     advance();
-    return shared_ptr<Stmt>(new IfStmt(condition_list, block_list));
+    return make_shared<IfStmt>(condition_list, block_list);
 }
 
 shared_ptr<Stmt> Parser::print() {
@@ -330,7 +330,7 @@ shared_ptr<Stmt> Parser::print() {
             throw ExpectedParClose(filename, peek().line, "after list of \"print\" arguments");
         }
     }
-    return shared_ptr<Stmt>(new Print(keyword, args));
+    return make_shared<Print>(keyword, args);
 }
 
 shared_ptr<Stmt> Parser::declaration() {
@@ -346,14 +346,14 @@ shared_ptr<Stmt> Parser::declaration() {
     }
     // In declarations, attributing initial values is optional.
     if (!check("SINGLE_EQUAL", true))
-        return shared_ptr<Stmt>(new Declaration(vars));
+        return make_shared<Declaration>(vars);
     // If an equal sign is found, an expression list is expected.
     try {exprs = exp_list();}
     catch(ExpectedExpr& err) {
         err.set_where("in local declaration expression list");
         throw;
     }
-    return shared_ptr<Stmt>(new Declaration(vars, exprs));
+    return make_shared<Declaration>(vars, exprs);
 }
 
 shared_ptr<Stmt> Parser::assignment() { 
@@ -375,7 +375,7 @@ shared_ptr<Stmt> Parser::assignment() {
         err.set_where("in assignment expression list");
         throw;
     }
-    return shared_ptr<Stmt>(new Assignment(vars, exprs));
+    return make_shared<Assignment>(vars, exprs);
 }
 
 vector<string> Parser::var_list() {

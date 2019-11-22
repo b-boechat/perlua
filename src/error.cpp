@@ -9,7 +9,6 @@ ParserError::ParserError(string filename_, unsigned long line_, const char* info
     filename(filename_), line(to_string(line_)), info(info_), where(where_) {}
 
 const char* ParserError::what() const throw() {
-    // Static is necessary here. TODO explicar
     static string message = filename+":"+line+": "+"Parser Error: "+info+(where==""? "." : " "+where+".");
     return message.c_str();
 }

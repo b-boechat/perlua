@@ -45,7 +45,6 @@ void Evaluator::run() {
     for (auto it = statements.begin(); it != statements.end(); ++it) {
         execute(*it);
     }
-    cout << "\n:)" << endl;
 }
 
 
