@@ -13,9 +13,7 @@
 #include "expr.h"
 #include "evaluator.h"
 
-#define LEXER_ERROR 1
-#define PARSER_ERROR 2
-#define RUNTIME_ERROR 3
+enum {OK, LEXER_ERROR, PARSER_ERROR, RUNTIME_ERROR};
 
 
 using namespace std;
@@ -76,7 +74,6 @@ int main (int argc, char** argv, char** env) {
         exit(LEXER_ERROR);
     }
     Parser parser(filename, codified_tokens.c_str());
-//    parser.print_tokens();
     vector<shared_ptr<Stmt> > statements;
     try {
         statements = parser.parse();
@@ -93,6 +90,6 @@ int main (int argc, char** argv, char** env) {
         cout << err.what() << endl;
         exit(RUNTIME_ERROR);
     }
-    return 0;
+    return OK;
 }
 
