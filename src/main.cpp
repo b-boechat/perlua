@@ -1,7 +1,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <stdio.h> // strncpy
+#include <cstring> // strncpy
 #include <iostream>
 #include <EXTERN.h>
 #include <perl.h>

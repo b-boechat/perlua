@@ -49,4 +49,4 @@ interpreter: $(PROGRAMOBJS)
 	rm -f *.o
 
 clean:
-	rm -f *.o interpreter
+	rm -f obj/*.o interpreter

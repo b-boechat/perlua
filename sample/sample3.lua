@@ -1,6 +1,6 @@
 do
-    local it = 50 -- Define number of iterations here
-    local i = 0
+    local it = 15 -- Define number of iterations here
+    local i = 1
     local current, previous = 1, 0
     while (i <= it) do
         print (current)

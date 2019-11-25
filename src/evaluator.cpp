@@ -2,7 +2,7 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include <math.h> // floor
+#include <cmath> // floor
 #include <sstream> // ostringstream
 #include <iomanip> // setprecision
 #include "token.h"

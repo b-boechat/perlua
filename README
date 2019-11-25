@@ -1,1 +1,9 @@
 A simple interpreter for a subset of Lua, written in C++ and Perl.
+
+Instruções de uso:
+
+$ make
+$ export PERL5LIB=lib/perl5/x86_64-linux-gnu-thread-multi/
+$ ./interpreter <NOME_DO_ARQUIVO>
+
+Se nenhum nome for fornecido, ocorrerá a intepretação do arquivo "input.lua"
